@@ -1,9 +1,11 @@
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-menu-button/paper-menu-button.html">
-<link rel="import" href="../../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<!-- <link rel="import" href="../../bower_components/paper-menu/paper-menu.html"> -->
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="edit-contact-dialog.html">
 
@@ -45,18 +47,18 @@
           <p style="margin: 0; color: #737373;">Last call</p>
         </div>
         <paper-icon-item>
-          <iron-icon icon="communication:phone" item-icon></iron-icon>
+          <iron-icon icon="communication:phone" slot="item-icon"></iron-icon>
           <paper-item-body two-line>
             <div>[[contactPrimary]]</div>
             <div secondary>[[contactSecondary]]</div>
           </paper-item-body>
-          <paper-menu-button allow-outside-scroll no-animations>
-            <paper-icon-button icon="more-vert" class="dropdown-trigger"></paper-icon-button>
-            <paper-menu id="action-menu" on-iron-select="handleMenuSelected" class="dropdown-content">
+          <paper-menu-button>
+            <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+            <paper-listbox on-iron-select="handleMenuSelected" slot="dropdown-content" id="action-menu">
               <paper-item>Call</paper-item>
               <paper-item>Edit</paper-item>
               <paper-item>Send SMS</paper-item>
-            </paper-menu>
+            </paper-listbox>
           </paper-menu-button>
         </paper-icon-item>
       </template>
