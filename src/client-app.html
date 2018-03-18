@@ -564,7 +564,11 @@
       _sendXMLHttpRequest: function(e, params) {
         var a = document.createElement('a');
         a.href = window.__socket.url;
-        var ajax = document.querySelector('iron-ajax');
+        // var ajax = document.querySelector('iron-ajax');
+        const ajax = this.$.ajax;
+        if (!ajax) {
+          throw new Error('Ajax component not found!');
+        }
         ajax.url = 'http://' + a.hostname + ':19990/' + params.action;
         //ajax.method = 'POST';
         ajax.params = {
