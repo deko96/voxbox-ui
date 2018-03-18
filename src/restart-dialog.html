@@ -9,22 +9,32 @@
       paper-dialog {
         min-height: 130px;
       }
-
-      paper-button {
+      .buttons {
+        display: flex;
+        justify-content: center;
+      }
+      paper-button[dialog-confirm] {
         color: rgb(0, 188, 212);
-        width: 100%;
+      }
+
+      paper-button[dialog-dismiss] {
+        color: red;
       }
 
     </style>
     <paper-dialog 
       id                     = "dialog"
-      style                  = "width: 250px;"
       opened                 = "{{opened}}">
       <div>
-        <paper-button 
+        <h3>Are you sure that you want to restart this box?</h3>
+        <div class="buttons">
+          <paper-button dialog-confirm autofocus on-tap="restartBox">Yes</paper-button>
+          <paper-button dialog-dismiss on-tap="close">No</paper-button>
+        </div>
+        <!-- <paper-button 
           on-tap             = "restartBox">
           Restart Voxbox
-        </paper-button>
+        </paper-button> -->
       </div>
       <!--
       <template 
@@ -74,7 +84,7 @@
           action: 'systemRestart',
           reason: 'User initiated',
         });
-        this.close();
+        // this.close();
       },
 
       /*
