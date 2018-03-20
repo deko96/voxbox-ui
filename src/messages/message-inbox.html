@@ -4,7 +4,6 @@
 <link rel="import" href="../../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../../bower_components/polymer/polymer.html">
-<link rel="import" href="../../bower_components/spinner-backdrop/spinner-backdrop.html">
 <link rel="import" href="confirm-delete-dialog.html">
 <link rel="import" href="message-compose-dialog.html">
 <link rel="import" href="message-controls.html">
@@ -13,12 +12,13 @@
 <link rel="import" href="message-list-behavior.html">
 <link rel="import" href="message-list-item.html">
 <link rel="import" href="message-list-styles.html">
+<link rel="import" href="message-item.html">
+<link rel="import" href="../core/spinner-backdrop.html">
 
 <dom-module id="message-inbox">
   <template>
     <style include="message-list-styles"></style>
     <style>
-
       paper-fab {
         position: fixed;
         right: 30px;
@@ -36,16 +36,23 @@
       }
 
     </style>
+
+    <!-- Message Compose Dialog -->
     <message-compose-dialog
       id                      = "message-compose-dialog"
       on-confirmed            = "_handleSendMessage"
       channels                = "[[channels]]">
     </message-compose-dialog>
+    <!-- / Message Compose Dialog -->
+    <!-- Confirm Message Delete Dialog -->
     <confirm-delete-dialog 
       id                      = "confirm-delete-dialog" 
       on-delete-confirmed     = "_handleDeleteSelection"
       selection-size          = "[[selectionSize]]">
     </confirm-delete-dialog>
+    <!-- / Confirm Message Delete Dialog -->
+
+    <!-- Message Details Dialog -->
     <message-details 
       id                      = "details"
       channels                = "[[channels]]"
@@ -55,13 +62,9 @@
       on-prev                 = "showPreviousMessage"
       on-sms-out              = "_handleSMSOut">
     </message-details>
-    <array-filter
-      id                      = "array-filter"
-      items                   = "{{messages}}"
-      filtered                = "{{filtered}}"
-      observe                 = "favorite"
-      filter                  = "_filter">
-    </array-filter>
+    <!-- / Message Details Dialog -->
+
+    <!-- No Messages Block -->
     <div
       class                   = "no-messages"
       hidden$                 = "[[!isEmpty]]">
@@ -69,51 +72,9 @@
         There are no messages here.
       </paper-material>
     </div>
-    <iron-list
-      id                      = "grid"
-      as                      = "item"
-      hidden$                 = "[[!gridMode]]"
-      selected-items          = "{{gridSelection}}"
-      on-scroll               = "onScroll"
-      items                   = "[[filtered]]"
-      max-physical-count      = "1000"
-      multi-selection
-      grid>
-      <template>
-        <message-grid-item
-          on-tap              = "onTap"
-          on-favorite-toggled = "onFavoriteToggled"
-          on-selected-toggled = "onSelectedToggled"
-          on-show-details     = "onShowDetails"
-          select-mode         = "[[hasSelection]]"
-          selected            = "[[selected]]"
-          favorite            = "[[item.favorite]]"
-          item                = "[[item]]">
-        </message-grid-item>
-      </template>
-    </iron-list>
-    <iron-list
-      id                      = "list"
-      as                      = "item"
-      hidden$                 = "[[gridMode]]"
-      selected-items          = "{{listSelection}}"
-      on-scroll               = "onScroll"
-      items                   = "[[filtered]]"
-      max-physical-count      = "1000"
-      multi-selection>
-      <template>
-        <message-list-item
-          on-tap              = "onTap"
-          on-favorite-toggled = "onFavoriteToggled"
-          on-selected-toggled = "onSelectedToggled"
-          on-show-details     = "onShowDetails"
-          select-mode         = "[[hasSelection]]"
-          selected            = "[[selected]]"
-          favorite            = "[[item.favorite]]"
-          item                = "[[item]]">
-        </message-list-item>
-      </template>
-    </iron-list>
+    <!-- / No Messages Block -->
+
+    <!-- Scroll To Bottom Fab Button -->
     <paper-fab
       hidden$                 = "[[atEnd]]"
       class                   = "scroll-button"
@@ -121,11 +82,17 @@
       icon                    = "hardware:keyboard-arrow-down"
       mini>
     </paper-fab>
+    <!-- / Scroll To Bottom Fab Button -->
+
+    <!-- Open Message Dialog Fab Button -->
     <paper-fab
       icon                    = "communication:message"
       on-tap                  = "_openMessageDialog"
       style                   = "bottom: 74px;">
     </paper-fab>
+    <!-- / Open Message Dialog Fab Button -->
+
+    <!-- Message Controls Action Bar -->
     <message-controls
       id                      = "controls"
       is-empty                = "[[isEmpty]]"
@@ -136,11 +103,49 @@
       on-star-selection       = "onStarSelection"
       on-unstar-selection     = "onUnstarSelection"
       on-unstar-all           = "onUnstarAll"
+      on-toggle-grid          = "onToggleGrid"
       filter-starred          = "{{filterStarred}}"
       has-selection           = "[[hasSelection]]"
       selection-size          = "[[selectionSize]]"
       grid-mode               = "{{gridMode}}">
     </message-controls>
+    <!-- / Message Controls Action Bar -->
+    
+    <!-- Messages Filter -->
+    <array-filter
+      id                      = "array-filter"
+      items                   = "{{messages}}"
+      filtered                = "{{filtered}}"
+      observe                 = "favorite"
+      filter                  = "_filter">
+    </array-filter>
+    <!-- / Messages Filter -->
+
+    <!-- Messages List -->
+    <iron-list
+      id                      = "list"
+      as                      = "item"
+      selected-items          = "{{selection}}"
+      on-scroll               = "onScroll"
+      items                   = "[[filtered]]"
+      max-physical-count      = "1000"
+      grid$                   = "[[grid]]"
+      multi-selection>
+      <template>
+        <message-item
+          on-tap              = "onTap"
+          on-selected-toggled = "onSelectedToggled"
+          on-favorite-toggled = "onFavoriteToggled"
+          on-show-details     = "onShowDetails"
+          select-mode         = "[[hasSelection]]"
+          selected            = "[[selected]]"
+          favorite            = "[[item.favorite]]"
+          grid                = "[[grid]]"
+          item                = "[[item]]">
+        </message-item>
+      </template>
+    </iron-list>
+    <!-- / Messages List -->
   </template>
   <script>
 
@@ -183,16 +188,17 @@
           type: Boolean,
           value: false,
         },
+        grid: {
+          type: Boolean,
+          value: false
+        }
       },
 
       behaviors: [
-        MessageListBehavior,
+        MessageListBehavior
       ],
 
       observers: [
-        '_filterStarredChanged(filterStarred)',
-        '_gridModeChanged(gridMode)',
-        '_updateIsEmpty(filtered, filtered.*)',
       ],
 
       ready: function() {
@@ -200,6 +206,14 @@
         var freshold = localStorage.getItem('__voxbox__fresh');
         if (freshold) {
           this.freshold = Number(freshold);
+        }
+      },
+      onSelectedToggled: function(e) {
+        const list = this.$.list;
+        if (e.model.selected) {
+          list.deselectIndex(e.model.index);
+        } else {
+          list.selectIndex(e.model.index);
         }
       },
 
@@ -230,8 +244,7 @@
         this._process(indices, function(index) {
           this.set('messages.' + index + '.favorite', false);
         }, function() {
-          this._getList().clearSelection();
-          this._updateSelection();
+          this.$.list.clearSelection();
           if (ids.length) {
             this.fire('message', {
               event: 'messageFavoriteUnset',
@@ -257,17 +270,16 @@
       },
 
       onTap: function(e) {
-        if (this.hasSelection && ['checkboxContainer', 'icon'].indexOf(e.target.id) == -1) {
-          var list = this._getList();
-          e.model.selected ? list.deselectItem(e.model.index) : list.selectItem(e.model.index);
-          this._updateSelection();
-        }
-      },
-
-      onSelectedToggled: function(e) {
-        var list = this._getList();
-        e.model.selected ? list.deselectItem(e.model.index) : list.selectItem(e.model.index);
-        this._updateSelection();
+        const target = e.__target;
+        if (!this.hasSelection) return;
+        if (['PAPER-CHECKBOX', 'IRON-ICON'].includes(target.tagName)) return;
+        if (target.tagName === 'DIV' && target.id === 'checkboxContainer') return;
+        
+        const list = this.$.list;
+        if (e.model.selected)
+          list.deselectIndex(e.model.index);
+        else
+          list.selectIndex(e.model.index);
       },
 
       _setPropertyOnSelected: function(prop, value) {
@@ -281,7 +293,7 @@
           ids.push(item.id);
         }, function() {
           this._getList().clearSelection();
-          this._updateSelection();
+          // this._updateSelection();
           if ('favorite' === prop) {
             if (ids.length) {
               this.fire('message', {
@@ -314,14 +326,14 @@
         }
       },
 
-      _gridModeChanged: function(gridMode) {
-        var list = this._getList();
-        this.updateGeometry();
-        list.scrollToIndex(this.scrollIndex);
-        this.$.list.clearSelection();
-        this.$.grid.clearSelection();
-        this.selection = [];
-      },
+      // _gridModeChanged: function(gridMode) {
+      //   var list = this._getList();
+      //   this.updateGeometry();
+      //   list.scrollToIndex(this.scrollIndex);
+      //   this.$.list.clearSelection();
+      //   this.$.grid.clearSelection();
+      //   this.selection = [];
+      // },
 
       _updateScrollIndex: function() {
         if (this.filterStarred) {
@@ -360,22 +372,25 @@
       },
 
       _getList: function() {
-        return this.gridMode ? this.$.grid : this.$.list;
+        return this.$.list;
+        // return this.gridMode ? this.$.grid : this.$.list;
       },
 
       _selectAllComplete: function() {
-        this._updateSelection();
+        // this._updateSelection();
       },
 
-      _updateSelection: function() {
-        this.selection = [];
-        var selection = this.gridMode ? this.gridSelection : this.listSelection;
-        if (selection) {
-          selection.forEach(function(item) {
-            this.push('selection', item);
-          }, this);
-        }
-      },
+      // _updateSelection: function() {
+      //   console.log('updateSelection', this.listSelection);
+      //   // this.selection = [];
+      //   // var selection = this.listSelection;
+      //   // console.log(selection, 'updateSelection');
+      //   // if (selection) {
+      //   //   selection.forEach(function(item) {
+      //   //     this.push('selection', item);
+      //   //   }, this);
+      //   // }
+      // },
 
       _openMessageDialog: function() {
         var dialog = this.$['message-compose-dialog'];

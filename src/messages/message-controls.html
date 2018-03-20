@@ -34,10 +34,10 @@
       }
 
       .container {
-        @apply(--layout-horizontal);
-        @apply(--layout-wrap);
-        @apply(--layout-start-justified);
-        @apply(--layout-self-stretch);
+        @apply --layout-horizontal;
+        @apply --layout-wrap;
+        @apply --layout-start-justified;
+        @apply --layout-self-stretch;
       }
 
       .controls {
@@ -169,7 +169,7 @@
       properties: {
         gridSelected: {
           type: Boolean,
-          value: true,
+          value: false,
         },
         hasSelection: {
           type: Boolean,
@@ -250,6 +250,7 @@
 
       _toggleUseGrid: function() {
         this.gridSelected = !this.gridSelected;
+        this.fire('toggle-grid', this.gridSelected);
       },
 
       _gridButtonIcon: function(gridSelected) {

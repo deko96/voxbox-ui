@@ -19,27 +19,38 @@
         computed: '_computedHasSelection(selection.*)',
         notify: true,
       },
+      grid: {
+        type: Boolean,
+        value: false,
+        notify: true
+      }
     },
 
     onSelectAll: function() {
-      var messages = this.filtered || this.messages;
-      var list = this._getList();
-      this._process(messages, function(item) {
-        list.selectItem(item);
-      }, function() {
-        this._selectAllComplete();
-      });
+      const messages = this.filtered || this.messages;
+      const list = this.$.list;
+      if (list) {
+        this._process(messages, (item) => {
+          list.selectItem(item); 
+        }, () => {
+          // .. CB After the process is done.
+        });
+      }
     },
 
     onUnselectAll: function() {
-      this._getList().clearSelection();
-      this.selection = [];
+      const list = this.$.list;
+      if (list) {
+        list.clearSelection();
+      }
+      // this._getList().clearSelection();
+      // this.selection = [];
     },
 
     onSelectedToggled: function(e) {
-      var list = this._getList();
-      e.model.selected ? list.deselectItem(e.model.index) 
-                       : list.selectItem(e.model.index);
+      // var list = this._getList();
+      // e.model.selected ? list.deselectItem(e.model.index) 
+      //                  : list.selectItem(e.model.index);
     },
 
     onShowDetails: function(e) {
@@ -57,6 +68,15 @@
 
     onResize: function() {
       this.updateGeometry();
+    },
+
+    onToggleGrid: function(event, value) {
+      this.grid = value;
+      const list = this.$.list;
+      if (list) {
+        // After toggling fire a resize event to the list, so it will recalculate the position of the elements in the grid/list
+        list.fire('iron-resize');
+      }
     },
 
     deleteMessage: function(index) {
@@ -125,11 +145,15 @@
     },
 
     _showSpinner: function() {
-      var body = document.querySelector('body');
-      this._spinner = document.createElement('spinner-backdrop');
-      this._spinner.loading = true;
-      this._spinner.customStyle['--spinner-backdrop-overlay-color'] = 'rgba(0,0,0,0.5)';
-      Polymer.dom(body).appendChild(this._spinner);
+      if (!this._spinner) {
+        const body = document.querySelector('body');
+        this._spinner = document.createElement('spinner-backdrop');
+        this._spinner.loading = true;
+        // this._spinner.customStyle['--spinner-backdrop-overlay-color'] = 'rgba(0,0,0,0.5)';
+        Polymer.dom(body).appendChild(this._spinner);
+      } else {
+        if (!this._spinner.loading) this._spinner.loading = true;
+      }
     },
 
     _hideSpinner: function() {

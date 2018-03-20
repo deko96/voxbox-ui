@@ -497,19 +497,19 @@
 
       _tabChanged: function(tab) {
         if (1 === tab) {
-          window.setTimeout(function() {
-            var inbox = this.$['inbox'];
-            var last = inbox._getList().lastVisibleIndex;
-            if (isNaN(last) || last < 0) {
-              inbox._getList().scrollToIndex(0);
-              last = inbox._getList().lastVisibleIndex;
-            }
-            inbox._updateScrollIndex();
-            if (last > inbox.freshold) {
-              inbox.freshold = last;
-              inbox._updateLocalStorage();
-            }
-          }.bind(this), 50);
+          // window.setTimeout(function() {
+          //   var inbox = this.$['inbox'];
+          //   var last = inbox._getList().lastVisibleIndex;
+          //   if (isNaN(last) || last < 0) {
+          //     inbox._getList().scrollToIndex(0);
+          //     last = inbox._getList().lastVisibleIndex;
+          //   }
+          //   inbox._updateScrollIndex();
+          //   if (last > inbox.freshold) {
+          //     inbox.freshold = last;
+          //     inbox._updateLocalStorage();
+          //   }
+          // }.bind(this), 50);
         }
       },
 
@@ -520,7 +520,7 @@
       _uiHidden: function(hasInitialized, online, boxConnected) {
         var hidden = !online || !hasInitialized;
         if (!hidden) {
-          this.$['inbox'].updateGeometry();
+          // this.$['inbox'].updateGeometry();
         }
         return hidden;
       },

@@ -46,7 +46,6 @@
     "paper-checkbox": "PolymerElements/paper-checkbox#^2.0.2",
     "paper-toggle-button": "PolymerElements/paper-toggle-button#^2.1.0",
     "array-filter": "43081j/array-filter#^2.0.1",
-    "spinner-backdrop": "deko96/spinner-backdrop2",
     "moment": "^2.21.0",
     "robust-websocket": "^0.2.1",
     "neon-animation": "PolymerElements/neon-animation#^2.2.1",

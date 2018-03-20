@@ -2,6 +2,10 @@
   MessageItemBehavior = {
 
     properties: {
+      grid: {
+        type: Boolean,
+        value: false
+      },
       selected: {
         type: Boolean,
         value: false,
@@ -13,10 +17,11 @@
       selectMode: {
         type: Boolean,
         value: false,
-      },
+      }
     },
 
     _toggleSelected: function(e) {
+      // console.log('_toggleSelected', e);
       this.fire('selected-toggled', e);
     },
 
