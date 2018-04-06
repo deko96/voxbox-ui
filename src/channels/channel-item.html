@@ -118,7 +118,7 @@
 
       paper-material {
         background: white;
-        @apply(--layout-vertical);
+        @apply --layout-vertical;
         justify-content: space-between;
         border-radius: 3px;
       }
@@ -151,13 +151,16 @@
               class                = "network-mode">
               [[networkMode]]
             </div>
-            <iron-icon icon        = "[[signalStrengthIcon]]"></iron-icon>
+            <iron-icon
+              hidden$     = "[[_hideSignalStrength(type)]]"
+              icon        = "[[signalStrengthIcon]]">
+            </iron-icon>
           </div>
           <div 
             class                  = "channel-description"> 
             <paper-item-body 
               two-line>
-              <div>[[channelId]]</div>
+              <div>[[_getChannelLabel(label, channelId)]]</div>
               <div 
                 class              = "phone-number">[[phoneNumber]]</div>
             </paper-item-body>
@@ -278,9 +281,11 @@
             id                   = "controls"
             channel-id           = "[[channelId]]"
             mode                 = "[[mode]]"
+            type                 = "[[type]]"
             direction            = "[[direction]]"
             contact-primary      = "[[contactPrimary]]"
-            contact-secondary    = "[[contactSecondary]]">
+            contact-secondary    = "[[contactSecondary]]"
+            on-close             = "handleChannelClose">
           </channel-controls>
           </template>
         </div>
@@ -342,6 +347,8 @@
         phoneNumber: {
           type: String,
         },
+        label: String,
+        type: String,
         hasContactName: {
           type: Boolean,
           value: false,
@@ -441,6 +448,21 @@
       isOnAir: function(mode) {
         return 'master' === mode;
       },
+
+      _hideSignalStrength: function(type) {
+        return type === 'sip';
+      },
+
+      _getChannelLabel: function(label, channelId) {
+        return label ? label : channelId;
+      },
+
+      handleChannelClose: function(event, channelId) {
+        this.fire('message', {
+          event: 'channelMode',
+          data: { [channelId]: null }
+        });
+      }
 
     });
 

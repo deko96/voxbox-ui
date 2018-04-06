@@ -3,6 +3,7 @@
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/paper-radio-button/paper-radio-button.html">
 <link rel="import" href="../../bower_components/paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <dom-module id="call-dialog">
@@ -42,18 +43,19 @@
       <h2>Make a call</h2>
       <div>
         <label id            = "label1">
-          Channel:
+          Lines:
         </label>
         <paper-radio-group
-          id                 = "channel"
-          selected           = "{{channel}}"
-          aria-labelledby    = "label1">
+          id                            = "line"
+          selected                      = "{{line}}"
+          aria-labelledby               = "label1"
+          on-paper-radio-group-changed  = "handleLineChanged">
           <template 
             is               = "dom-repeat" 
-            items            = "[[channels]]">
+            items            = "[[lines]]">
             <paper-radio-button 
               name           = "[[item.id]]">
-              [[item.id]]
+              [[getLineLabel(item)]]
             </paper-radio-button>
           </template>
           <paper-radio-button 
@@ -62,14 +64,36 @@
           </paper-radio-button>
         </paper-radio-group>
       </div>
-      <paper-input 
-        required 
-        auto-validate 
-        id                   = "number-input"
-        label                = "Number"
-        value                = "{{number}}"
-        error-message        = "This field is required.">
-      </paper-input>
+      <!-- Regular Input for Calling numbers -->
+      <template is="dom-if" if="[[!callAgent]]" restamp>
+        <paper-input 
+          required 
+          auto-validate 
+          id                   = "number-input"
+          label                = "Number"
+          value                = "{{number}}"
+          error-message        = "This field is required.">
+        </paper-input>
+      </template>
+      <!-- / Regular Input for Calling numbers -->
+
+      <!-- Dropdown Input for Calling agents -->
+      <template is="dom-if" if="[[callAgent]]" restamp>
+        <paper-dropdown-menu label="Agents">
+          <paper-listbox slot="dropdown-content" selectedItem="{{number}}" on-iron-select="handleAgentChange">
+            <template is="dom-repeat" items="[[getAgents()]]">
+              <paper-item label="[[getAgentFullName(item)]]" value="[[getAgentNumber(item)]]">
+                <paper-item-body two-line>
+                  <div>[[getAgentFullName(item)]]</div>
+                  <div secondary>[[getAgentNumber(item)]]</div>
+                </paper-item-body>
+              </paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+      </template>
+      <!-- / Dropdown Input for Calling agents -->
+      
       <div class="buttons">
         <paper-button dialog-dismiss>
           Cancel
@@ -90,14 +114,27 @@
       is: 'call-dialog',
 
       properties: {
+        callAgent: {
+          type: Boolean,
+          value: false
+        },
         number: {
           type: String,
           value: '',
+          notify: true
         },
         channel: {
           type: String,
           value: '__auto__',
         },
+        lines: {
+          type: Array,
+          value: []
+        },
+        line: {
+          type: String,
+          value: '__auto__'
+        }
       },
 
       open: function() {
@@ -107,8 +144,13 @@
 
       reset: function() {
         this.number  = '';
-        this.channel = '__auto__';
-        this.$['number-input'].invalid = false;
+        this.line = '__auto__';
+        this.callAgent = false;
+        let numberInput = document.querySelector('number-input');
+        if (numberInput) {
+          numberInput.invalid = false;
+        }
+        // this.$['number-input'].invalid = false;
       },
 
       onClosed: function(event) {
@@ -120,6 +162,41 @@
       formValid: function(number) {
         return !!number;
       },
+
+      getLineLabel: function(line) {
+        if (line.label) return line.label;
+        if (line.name) return line.name;
+        return line.id;
+      },
+
+      getAgents: function() {
+        let line = this.lines.find(line => line.id === this.line);
+        return line ? line.agents : null;
+      },
+
+      getAgentFullName: function(agent) {
+        return [agent.firstname, agent.lastname].join(' ');
+      },
+
+      getAgentNumber: function(agent) {
+        return agent.phone;
+      },
+
+      handleLineChanged: function() {
+        let line = this.lines.find(line => line.id === this.line);
+        if (line && line.agents) {
+          this.callAgent = true;
+        } else {
+          this.callAgent = false;
+        }
+        this.number = '';
+      },
+
+      handleAgentChange: function(event, agent) {
+        if (agent && agent.item.value) {
+          this.number = agent.item.value;
+        }
+      }
 
     });
 

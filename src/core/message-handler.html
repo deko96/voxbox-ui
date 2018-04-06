@@ -1,0 +1,182 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="message-handler">
+    <template></template>
+    <script>
+        /* All Values are in MS */
+        const PING_INTERVAL = 10000;
+        const PONG_TIMEOUT = 5000;
+        const MAX_RECONNECTION_TIMEOUT = 15000;
+
+        /**
+        * Intervals/Timeouts for the Websocket instance
+        **/
+        let PING = null;
+        let PONG = null;
+        let RECONNECT = null;
+        let RECONNECT_ATTEMPTS = 0;
+
+        Polymer({
+            is: 'message-handler',
+            properties: {
+                socket: {
+                    type: Object,
+                    value: null
+                },
+                connected: {
+                    type: Number,
+                    value: null,
+                    notify: true,
+                    reflectToAttribute: true
+                },
+                debug: {
+                    type: Boolean,
+                    value: false
+                }
+            },
+            
+            ready() {
+                //.. WebSocket component is ready here we should connect.
+                this.connect();
+            },
+
+            connect() {
+                //.. Function to connect the websocket
+                if (!this.connected) {
+                    if (this.debug) {
+                        console.log('Connecting to ', this._getHostUrl());
+                    }
+                    let socket = new WebSocket(this._getHostUrl());
+                    socket.onopen = this._onOpen.bind(this);
+                    socket.onmessage = this._onMessage.bind(this);
+                    socket.onerror = this._onError.bind(this);
+                    socket.onclose = this._onClose.bind(this);
+
+                    this.socket = socket;
+                }
+            },
+
+            ping() {
+                // .. Function to ping the server
+                if (this.debug) {
+                    console.log('>>>>>>>> ping >>>>>>>>');
+                }
+                this.send('ping', new Date().toISOString());
+                PONG = setTimeout(function() {
+                    if (this._isSocketConnected()) {
+                        clearInterval(PING);
+                        this.socket.removeEventListener('message', this._onMessage);
+                        this.socket.removeEventListener('close', this._onClose);
+                        this.connected = null;
+                        this.socket.retired = true;
+                        this.socket.close(3000, 'Forced Retiring!');
+                        this.connect();
+                    }
+                }.bind(this), PONG_TIMEOUT);
+            },
+
+            pong() {
+                // .. Function to be executed when pong is back from the server
+                if (this.debug) {
+                    console.log('>>>>>>>> pong >>>>>>>>');
+                }
+                clearTimeout(PONG);
+            },
+
+            send(event, payload) {
+                if (this.debug) {
+                    console.log(`>>>>>>>> send ${event} >>>>>>>>`, payload);
+                }
+                // .. Function for sending data to the server.
+                let data = JSON.stringify({ event: event, data: payload });
+
+                if (this._isSocketConnected()) {
+                    this.socket.send(data);
+                }
+            },
+
+            /** Socket Related Functions **/
+            _onOpen(event) {
+                // .. Socket connection Opened
+                if (this.debug) {
+                    console.log('Websocket Connected to ', this._getHostUrl());
+                }
+                this.connected = Date.now();
+                RECONNECT_ATTEMPTS = 0;
+                PING = setInterval(this.ping.bind(this), PING_INTERVAL);
+            },
+
+            _onMessage(event) {
+                // .. Message has been received from the server
+                let message = null;
+                try {
+                    message = JSON.parse(event.data);
+                }
+                catch(e) {
+                    if (this.debug) {
+                        console.log('Failed to parse message received by the server!', event);
+                    }
+                    return;
+                }
+                this.pong();
+                this.fire('message', message);
+            },
+
+            _onError(event) {
+                // .. Error has been received from the server
+                if (this.debug) {
+                    console.log('!!!!!!!! Websocket Error !!!!!!!!', event);
+                }
+                this.fire('error', event);
+            },
+
+            _onClose(event) {
+                // .. Connection terminated
+                if (this.socket.retired) {
+                    if (this.debug) {
+                        console.log('Retired socket closed!');
+                    }
+                } else {
+                    if (event.code === 1006) {
+                        RECONNECT = setTimeout(this.connect.bind(this), this._reconnectIn());
+                    }
+
+                    if (!this.connected) {
+                        if (this.debug) {
+                            console.log('Socket not connected!');
+                        }
+                    } else {
+                        this.connected = null;
+                        clearTimeout(PONG);
+                        clearInterval(PING);
+                    }
+                }
+            },
+
+            _isSocketConnected() {
+                return this.socket.readyState === WebSocket.OPEN;
+            },
+
+            _reconnectIn() {
+                if ((++RECONNECT_ATTEMPTS * 1000) > MAX_RECONNECTION_TIMEOUT) {
+                    return MAX_RECONNECTION_TIMEOUT;
+                }
+                return RECONNECT_ATTEMPTS * 1000;
+            },
+
+            /** Other Functions **/
+            _getURLParameter: function(name) {
+                return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
+            },
+
+            _getHostUrl: function() {
+                var hostUrl = 'ws://' + (this._getURLParameter('host_url') || (window.location.hostname + ':19998')); // thehangar.farmradio.org:51234
+                if (this.debug) {
+                    console.log('Host: ' + hostUrl);
+                }
+                return hostUrl;
+            },
+
+        });
+    </script>
+</dom-module>

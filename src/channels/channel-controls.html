@@ -22,8 +22,20 @@
         padding-right: 0;
       }
 
+      .lastCall {
+        --paper-item-icon-width: 40px;
+      }
+
       .buttons {
-        padding: 8px 0;
+        padding-top: 8px;
+        display: flex;
+      }
+      .buttons paper-button {
+        display: inline-flex;
+        flex: 1;
+      }
+      .buttons paper-button.close {
+        color: red;
       }
 
     </style>
@@ -34,19 +46,13 @@
     <template 
       is = "dom-if" 
       if = "[[isFree(mode)]]">
-      <div class="buttons">
-        <paper-button 
-          on-tap   = "initCall">
-          Make a call
-        </paper-button>
-      </div>
       <template 
         is = "dom-if" 
         if = "[[hasContact(contactPrimary)]]">
-        <div style="padding: 12px; border-top: 1px solid #ddd;">
+        <div style="padding-top: 10px; border-top: 1px solid #ddd; margin-top: 10px;">
           <p style="margin: 0; color: #737373;">Last call</p>
         </div>
-        <paper-icon-item>
+        <paper-icon-item class="lastCall">
           <iron-icon icon="communication:phone" slot="item-icon"></iron-icon>
           <paper-item-body two-line>
             <div>[[contactPrimary]]</div>
@@ -62,6 +68,19 @@
           </paper-menu-button>
         </paper-icon-item>
       </template>
+      <div class="buttons" style="border-top: 1px solid #ddd;">
+        <paper-button 
+          on-tap   = "initCall">
+          Make a call
+        </paper-button>
+        <template is="dom-if" if="[[_showCloseButton(mode, type)]]">
+          <paper-button 
+            on-tap  = "closeChannel"
+            class   = "close">
+            Close
+          </paper-button>
+        </template>
+      </div>
     </template>
   </template>
   <script>
@@ -83,6 +102,9 @@
         mode: {
           type: String,
         },
+        type: {
+          type: String
+        }
       },
 
       initCall: function() {
@@ -143,6 +165,14 @@
           name: dialog.name,
         });
       },
+
+      _showCloseButton: function(mode, type) {
+        return mode === 'free' && type === 'sip';
+      },
+
+      closeChannel: function() {
+        this.fire('close', this.channelId);
+      }
 
     });
 

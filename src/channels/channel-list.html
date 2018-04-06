@@ -33,7 +33,7 @@
     <call-dialog
       id                       = "call-dialog"
       on-confirmed             = "handleCall"
-      channels                 = "[[activeChannels]]">
+      lines                    = "[[activeLines]]">
     </call-dialog>
     <message-compose-dialog
       id                       = "message-compose-dialog"
@@ -52,6 +52,8 @@
           direction            = "[[channel.direction]]"
           timestamp            = "[[channel.timestamp]]"
           phone-number         = "[[channel.number]]"
+          label                = "[[channel.label]]"
+          type                 = "[[channel.type]]"
           muted                = "{{channel.muted}}"
           level                = "{{channel.level}}"
           provider             = "[[computedProvider(channel, channel.*)]]"
@@ -86,6 +88,14 @@
           type: Array,
           computed: 'computedActiveChannels(channels, channels.*)',
         },
+        lines: {
+          type: Array,
+          value: []
+        },
+        activeLines: {
+          type: Array,
+          computed: 'computedActiveLines(lines, lines.*)'
+        }
       },
 
       behaviors: [
@@ -153,6 +163,12 @@
         return 'device:signal-cellular-null';
       },
 
+      computedActiveLines: function(lines) {
+        return lines.filter(function(line) {
+          return line.status === 'free';
+        }.bind(this));
+      },
+
       computedActiveChannels: function(channels) {
         return channels.filter(function(channel) {
           return 'free' === channel.mode;
@@ -218,7 +234,7 @@
           data: {
             number: dialog.number,
             mode: 'master',
-            channel_id: ('__auto__' === dialog.channel ? null : dialog.channel),
+            line_id: ('__auto__' === dialog.line ? null : dialog.line),
           },
         });
         var toast = document.createElement('paper-toast');

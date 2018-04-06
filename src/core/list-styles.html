@@ -1,0 +1,30 @@
+<dom-module id="list-styles">
+    <template>
+        <style>
+            :host {
+                height: 100%;
+                display: flex;
+            }
+
+            iron-list {
+                flex: 1 1 auto;
+                overflow-x: hidden !important;
+            }
+
+            .no-items {
+                display: flex;
+                width: 100%;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .no-items>paper-material {
+                text-align: center;
+                margin-bottom: 100px;
+                padding: 60px;
+                width: 400px;
+                background: white;
+            }
+        </style>
+    <template>
+</dom-module>

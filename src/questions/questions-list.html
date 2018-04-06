@@ -1,0 +1,220 @@
+<link rel="import" href="../../bower_components/array-filter/array-filter.html">
+<link rel="import" href="../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../core/list-behavior.html">
+<link rel="import" href="../core/list-styles.html">
+<link rel="import" href="../core/list-item.html">
+
+<dom-module id="questions-list">
+    <template>
+        <style include="list-styles"></style>
+
+        <!-- Question Details Dialog -->
+        <item-details-dialog 
+            id                      = "details"
+            channels                = "[[channels]]"
+            on-message              = "_forwardMessage"
+            on-delete-item          = "_handleDeleteConfirmed"
+            on-next                 = "showNextMessage"
+            on-prev                 = "showPreviousMessage"
+            on-sms-out              = "_handleSMSOut">
+        </item-details-dialog>
+        <!-- / Question Details Dialog -->
+
+        <!-- Messages Filter -->
+        <array-filter
+            id                      = "array-filter"
+            items                   = "{{items}}"
+            filtered                = "{{filtered}}"
+            observe                 = "favorite"
+            filter                  = "_filter">
+        </array-filter>
+        <!-- / Messages Filter -->
+
+        <!-- No Messages Block -->
+        <template is="dom-if" if="[[isEmpty]]">
+            <div
+              class                   = "no-items">
+              <paper-material>
+                There are no questions here.
+              </paper-material>
+            </div>
+        </template>
+        <!-- / No Messages Block -->
+
+        <!-- Message Controls Action Bar -->
+        <list-controls
+            id                      = "controls"
+            is-empty                = "[[isEmpty]]"
+            on-iron-resize          = "onResize"
+            on-select-all           = "onSelectAll"
+            on-unselect-all         = "onUnselectAll"
+            on-delete-selection     = "onDeleteSelection"
+            on-star-selection       = "onStarSelection"
+            on-unstar-selection     = "onUnstarSelection"
+            on-unstar-all           = "onUnstarAll"
+            on-toggle-grid          = "onToggleGrid"
+            filter-starred          = "{{filterStarred}}"
+            has-selection           = "[[hasSelection]]"
+            selection-size          = "[[selectionSize]]"
+            grid-selected           = "[[gridSelected]]"
+            grid-mode               = "{{gridMode}}"
+            favorite-options        = "[[favoritable]]">
+        </list-controls>
+        <!-- / Message Controls Action Bar -->
+
+        <!-- Questions List -->
+        <iron-list
+            id                      = "list"
+            as                      = "item"
+            selected-items          = "{{selection}}"
+            on-scroll               = "onScroll"
+            items                   = "[[filtered]]"
+            max-physical-count      = "1000"
+            grid$                   = "[[gridMode]]"
+            multi-selection>
+            <template>
+                <list-item
+                    on-tap              = "onTap"
+                    on-selected-toggled = "onSelectedToggled"
+                    on-favorite-toggled = "onFavoriteToggled"
+                    on-show-details     = "onShowDetails"
+                    select-mode         = "[[hasSelection]]"
+                    selected            = "[[selected]]"
+                    favorite            = "[[item.favorite]]"
+                    grid                = "[[gridMode]]"
+                    item                = "[[item]]"
+                    favoritable         = "[[favoritable]]">
+                </list-item>
+            </template>
+        </iron-list>
+        <!-- Questions List -->
+    </template>
+    <script>
+        Polymer({
+            is: 'questions-list',
+            behaviors: [
+                ListBehavior
+            ],
+            observers: [
+                '_filterStarredChanged(filterStarred)',
+                '_updateIsEmpty(filtered, filtered.*)'
+            ],
+            properties: {
+                selection: Array,
+                filtered: {
+                    type: Array,
+                    value: [],
+                },
+                filterStarred: {
+                    type: Boolean,
+                    value: false,
+                    notify: true
+                },
+                isEmpty: {
+                    type: Boolean,
+                    value: false,
+                },
+                scrollIndex: {
+                    type: Number,
+                    value: 0,
+                },
+                atEnd: {
+                    type: Boolean,
+                    value: false,
+                },
+                favoritable: {
+                    type: Boolean,
+                    value: true
+                },
+                gridMode: {
+                    type: Boolean
+                },
+                gridSelected: {
+                    type: Boolean,
+                    value: true
+                },
+                debug: {
+                    type: Boolean,
+                    value: false,
+                }
+            },
+            ready: function() {
+                // ..
+            },
+            onTap: function(e) {
+                let target = e.__target || e.target;
+                if (e.path) {
+                    target = e.path[0];
+                }
+                if (!this.hasSelection) return;
+                if (['PAPER-CHECKBOX', 'IRON-ICON'].includes(target.tagName)) return;
+                if (target.tagName === 'DIV' && target.id === 'checkboxContainer') return;
+
+                const list = this.$.list;
+                if (e.model.selected)
+                    list.deselectIndex(e.model.index);
+                else
+                    list.selectIndex(e.model.index);
+            },
+            onSelectedToggled: function(e) {
+                const list = this.$.list;
+                if (e.model.selected) {
+                    list.deselectIndex(e.model.index);
+                } else {
+                    list.selectIndex(e.model.index);
+                }
+            },
+            onFavoriteToggled: function(e) {
+                var value = !e.model.item.favorite;
+                this.set('filtered.' + e.model.index + '.favorite', value);
+                this.fire('message', {
+                    event: (value ? 'messageFavoriteSet' : 'messageFavoriteUnset'),
+                    data: [e.model.item.id],
+                });
+            },
+            _filter: function(item) {
+                if (this.filterStarred) {
+                    return !!item.favorite;
+                }
+                return true;
+            },
+            _filterStarredChanged: function(filterStarred) {
+                if (!filterStarred) {
+                    this.items = JSON.parse(JSON.stringify(this.items));
+                }
+                this.$['array-filter'].update();
+                this.$.list.clearSelection();
+                this.selection = [];
+
+                var index = this.scrollIndex;
+                if (!filterStarred) {
+                    // There must be a cleaner way to do this!
+                    window.setTimeout(function() {
+                        this.$.list.scrollToIndex(index);
+                        this._updateScrollIndex();
+                    }.bind(this), 2);
+                }
+            },
+            _updateIsEmpty: function(filtered) {
+                var nothing = !filtered.length;
+                if (this.isEmpty != nothing) {
+                    this.isEmpty = nothing;
+                }
+            },
+            _updateScrollIndex: function() {
+                if (this.filterStarred) {
+                    this.atEnd = true;
+                } else {
+                    var list = this.$.list;
+                    this.scrollIndex = list.firstVisibleIndex;
+                    this.atEnd = this.isEmpty 
+                        ? true 
+                        : list.lastVisibleIndex >= Math.max(0, this.filtered.length - 3);
+                }
+            }
+        });
+    </script>
+</dom-module>

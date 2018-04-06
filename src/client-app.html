@@ -17,19 +17,18 @@
 <link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="box/connection-monitor.html">
-<link rel="import" href="box/message-handler.html">
+<link rel="import" href="core/message-handler.html">
 <link rel="import" href="channels/channel-list.html">
 <link rel="import" href="error-dialog.html">
 <link rel="import" href="messages/message-inbox.html">
 <link rel="import" href="messages/message-outbox.html">
+<link rel="import" href="questions/questions-list.html">
 <link rel="import" href="restart-dialog.html">
 
 <dom-module id="client-app">
   <template>
     <style include="iron-flex"></style>
     <style>
-
       app-toolbar {
         background-color: #1a88ae;
         color: white;
@@ -103,23 +102,12 @@
       id                    = "ajax"
       on-response           = "_handleAjaxResponse">
     </iron-ajax>
-    <message-handler 
-      id                    = "message-handler"
-      on-open               = "handleConnectionOpened"
-      on-close              = "handleConnectionClosed"
-      on-message            = "handleMessage"
-      on-error              = "handleError"
-      debug                 = "[[debug]]">
-    </message-handler>
-    <connection-monitor
-      id                    = "monitor"
-      connected             = "{{boxConnected}}"
-      on-connected          = "onConnected"
-      on-disconnected       = "onDisconnected"
-      on-try-reconnect      = "reconnect"
-      on-message            = "sendMessage"
-      debug                 = "[[debug]]">
-    </connection-monitor>
+    <message-handler
+      id = "message-handler"
+      connected = "{{boxConnected}}"
+      on-message  = "handleMessage"
+      debug       = "[[debug]]"
+      ></message-handler>
     <error-dialog
       id                    = "error-dialog">
     </error-dialog>
@@ -159,71 +147,98 @@
     <div class="spinner-container">
       <paper-spinner active="[[_spinnerVisible(hasInitialized)]]"></paper-spinner>
     </div>
-    <app-header-layout hidden$="[[_uiHidden(hasInitialized, online, boxConnected)]]" fullbleed>
-      <app-header fixed>
-        <app-toolbar>
-          <div main-title>
-            <!-- http://fontmeme.com/fonts/young-frankenstein-font/ 28 -->
-            <img src="/images/voxbox.png" style="margin-top: 6px;" />
-            <span class="version">[[version]] client-0.3.5.5</span>
-          </div>
-          <paper-icon-button 
-            icon            = "notification:power" 
-            on-tap          = "_showRestartDialog">
-          </paper-icon-button>
-        </app-toolbar>
-        <paper-tabs selected="{{tab}}">
-          <paper-tab>
-            <div class="layout vertical center">
-              <iron-icon icon="av:volume-up"></iron-icon>
-              <label>Calls</label>
+    <template is="dom-if" if="[[!_uiHidden(hasInitialized, online, boxConnected)]]">
+      <app-header-layout fullbleed>
+        <app-header fixed>
+          <app-toolbar>
+            <div main-title>
+              <!-- http://fontmeme.com/fonts/young-frankenstein-font/ 28 -->
+              <img src="/images/voxbox.png" style="margin-top: 6px;" />
+              <span class="version">[[version]] client-0.3.5.5</span>
             </div>
-          </paper-tab>
-          <paper-tab>
-            <div class="layout vertical center">
-              <iron-icon icon="communication:message"></iron-icon>
-              <label>SMS Inbox
-                <paper-badge 
-                  for       = "number"
-                  hidden$   = "[[!unread]]"
-                  label     = "[[unread]]">
-                </paper-badge>
-              </label>
-            </div>
-          </paper-tab>
-          <paper-tab>
-            <div class="layout vertical center">
-              <iron-icon icon="custom:outbox"></iron-icon>
-              <label>Sent SMS</label>
-            </div>
-          </paper-tab>
-        </paper-tabs>
-      </app-header>
-      <iron-pages 
-        selected            = "[[tab]]">
-        <channel-list
-          diff              = "[[diff]]"
-          on-message        = "sendMessage"
-          on-update-contact = "handleUpdateContact"
-          channels          = "[[channels]]">
-        </channel-list>
-        <message-inbox 
-          id                = "inbox"
-          on-message        = "sendMessage"
-          unread            = "{{unread}}"
-          messages          = "[[inbox]]"
-          channels          = "[[activeChannels]]"
-          debug             = "[[debug]]">
-        </message-inbox>
-        <message-outbox
-          id                = "outbox"
-          on-message        = "sendMessage"
-          messages          = "[[outbox]]"
-          channels          = "[[activeChannels]]"
-          debug             = "[[debug]]">
-        </message-outbox>
-      </iron-pages>
-    </app-header-layout>
+            <paper-icon-button 
+              icon            = "notification:power" 
+              on-tap          = "_showRestartDialog">
+            </paper-icon-button>
+          </app-toolbar>
+          <paper-tabs selected="{{tab}}">
+            <paper-tab>
+              <div class="layout vertical center">
+                <iron-icon icon="av:volume-up"></iron-icon>
+                <label>Calls</label>
+              </div>
+            </paper-tab>
+            <paper-tab>
+              <div class="layout vertical center">
+                <iron-icon icon="communication:message"></iron-icon>
+                <label>SMS Inbox
+                  <template is="dom-if" if="[[unread]]">
+                    <paper-badge 
+                      for       = "number"
+                      label     = "[[unread]]">
+                    </paper-badge>
+                  </template>
+                </label>
+              </div>
+            </paper-tab>
+            <paper-tab>
+              <div class="layout vertical center">
+                <iron-icon icon="custom:outbox"></iron-icon>
+                <label>Sent SMS</label>
+              </div>
+            </paper-tab>
+            <paper-tab>
+              <div class="layout vertical center">
+                <iron-icon icon="communication:forum"></iron-icon>
+                <label>Q+A
+                  <template is="dom-if" if="[[unread]]">
+                    <paper-badge 
+                      for       = "number"
+                      label     = "[[unread]]">
+                    </paper-badge>
+                  </template>
+                </label>
+              </div>
+            </paper-tab>
+          </paper-tabs>
+        </app-header>
+        <iron-pages 
+          selected            = "[[tab]]">
+          <channel-list
+            id                = "calls"
+            diff              = "[[diff]]"
+            on-message        = "sendMessage"
+            on-update-contact = "handleUpdateContact"
+            channels          = "[[channels]]"
+            lines             = "[[lines]]">
+          </channel-list>
+          <message-inbox 
+            id                = "messageInbox"
+            on-message        = "sendMessage"
+            unread            = "{{unread}}"
+            items             = "[[inbox]]"
+            channels          = "[[activeChannels]]"
+            lines             = "[[activeLines]]"
+            debug             = "[[debug]]">
+          </message-inbox>
+          <message-outbox
+            id                = "outbox"
+            on-message        = "sendMessage"
+            items             = "[[outbox]]"
+            channels          = "[[activeChannels]]"
+            lines             = "[[activeLines]]"
+            debug             = "[[debug]]">
+          </message-outbox>
+          <questions-list
+            id                = "questions"
+            on-message        = "sendMessage"
+            items             = "[[questions]]"
+            lines             = "[[activeLines]]"
+            debug             = "[[debug]]">
+          </questions-list>
+        </iron-pages>
+      </app-header-layout>
+    </template>
   </template>
   <script>
 
@@ -246,6 +261,13 @@
           type: Array,
           value: [],
         },
+        questions: {
+          type: Array,
+          value: [
+            { id: 1, timestamp: Date.now() - 50000, content: 'This is my second question!', tags: ['Test', 'Question']},
+            { id: 2, timestamp: Date.now() - 120000, content: 'This is my first question!', tags: ['Test', 'Question']}            
+          ]
+        },
         channels: {
           type: Array,
           value: [],
@@ -255,13 +277,22 @@
           computed: '_activeChannels(channels, channels.*)',
           notify: true,
         },
+        lines: {
+          type: Array,
+          value: []
+        },
+        activeLines: {
+          type: Array,
+          computed: '_activeLines(lines, lines.*)',
+          notify: true
+        },
         unread: {
           type: Number,
           value: 0,
         },
         boxConnected: {
           type: Boolean,
-          value: true,
+          value: false,
         },
         hasInitialized: {
           type: Boolean,
@@ -274,6 +305,7 @@
         debug: {
           type: Boolean,
           value: false,
+          notify: true
         },
         version: {
           type: String,
@@ -285,36 +317,21 @@
         Polymer.AppNetworkStatusBehavior, 
       ],
 
-      onConnected: function() {
-        console.log('onConnected');
-      },
-
-      onDisconnected: function() {
-        console.log('onDisconnected');
-        this.$['message-handler'].hasDisconnected();
-      },
-
-      reconnect: function() {
-        if (!this.boxConnected) {
-          console.log('Trying to reconnect!');
-          this.$['message-handler'].connect();
-        }
-      },
-
       ready: function() {
         window.setTimeout(function() {
           if (!this.hasInitialized) {
             this.hasInitialized = true;          // Connection timeout
           }
         }.bind(this), 10000);
+
         if (this._getURLParameter('debug')) {
           this.debug = true;
-          console.log(this.$.inbox.freshold);
+          //console.log(this.$.inbox.freshold);
         }
       },
 
       send: function(event, data) {
-        this.$['message-handler'].send({event: event, data: data});
+        this.$['message-handler'].send(event, data);
       },
 
       handleUpdateContact: function(e) {
@@ -327,37 +344,22 @@
         }
       },
 
-      handleConnectionOpened: function() {
-        if (this.debug) {
-          console.log('handleConnectionOpened()');
-        }
-      },
-
-      handleConnectionClosed: function() {
-        if (this.debug) {
-          console.log('handleConnectionClosed()');
-        }
-      },
-
       handleMessage: function(event, payload) {
         if (this.debug && 'pong' != payload.event) {
           console.log('<<<<<<<<<<<<<<< (recv)');
           console.log(payload);
         }
-        this.$.monitor.pong();
         switch (payload.event) {
           case 'inboxMessages':
-            var messages = payload.data.messages;
-            var ids = payload.data.ids, inbox = [], outbox = [];
-            ids.forEach(function(id) {
-              var message = messages[id];
-              message.id = id;
-              if ('sms_in' == message.type) {
-                inbox.push(message);
-              } else {
-                outbox.push(message);
-              }
-            });
+            let messages = payload.data.messages;
+            let inbox = [], outbox = [];
+
+            for (let i =0; i < messages.length; i++) {
+              let message = messages[i];
+              let type = message.type;
+              type === 'sms_in' ? inbox.push(message) : outbox.push(message);
+            }
+
             this.set('inbox', inbox.reverse());
             this.set('outbox', outbox.reverse());
             break;
@@ -368,34 +370,34 @@
             toast.show();
             break;
           case 'inboxUpdate':
-            var only = null, count = 0;
-            Object.keys(payload.data).forEach(function(key) {
-              if (payload.data[key]) {
-                var message = payload.data[key];
-                message.id = key;
-                this.push('sms_in' === message.type ? 'inbox' : 'outbox', message);
-                if ('sms_in' === message.type) {
-                  only = 1 == ++count ? message : null;
-                }
+            let data = payload.data;
+            let count = 0;
+            let only = null;
+
+            Object.keys(data).forEach(function(key, i) {
+              let message = data[key];
+              let messageType = message.type === 'sms_in' ? 'inbox' : 'outbox';
+              let messageIndex = this._findMessageIndex(message);
+              // let messageIndex = messageType === 'inbox' ? this.inbox.findIndex(msg => msg.id === message.id) : this.outbox.findIndex(msg => msg.id === message.id);
+              if (messageIndex > -1) {
+                let mailbox = [...messageType === 'inbox' ? this.inbox : this.outbox];
+                mailbox[messageIndex] = message;
+                this.setProperties({
+                  [messageType]: mailbox
+                });
               } else {
-                this.inbox.forEach(function(item) {
-                  if (item.id !== key) return;
-                  var index = this.inbox.indexOf(item);
-                  this.splice('inbox', index, 1);
-                }, this);
-                this.outbox.forEach(function(item) {
-                  if (item.id !== key) return;
-                  var index = this.outbox.indexOf(item);
-                  this.splice('outbox', index, 1);
-                }, this);
+                this.push(messageType, message)
+                only = message;
+                count++;
               }
             }, this);
             if (count) {
-              var toast = document.createElement('paper-toast');
-              toast.text = only ? 'New message from ' 
-                                + only.endpoint + ': ' 
-                                + this._truncated(only.content, 60)
-                                : count + ' new messages!';
+              let toast = document.createElement('paper-toast');
+              if (count === 1) {
+                toast.text = ['New message from', only.endpoint, ].join(' ') + ': ' + this._truncated(only.content, 60);
+              } else {
+                toast.text = [count, ' new messages!'].join(' ');
+              }
               document.body.appendChild(toast); 
               toast.show();
             }
@@ -409,13 +411,36 @@
               after_id: null,
               count: 1000,
             });
+            
+            this.send('questionsFetch', {
+              filter: [],
+              after_id: null,
+              count: 1000
+            });
+
             this.set('channels', []);
             var channels = payload.data.mixer.channels;
             Object.keys(channels).forEach(function(key) {
               var channel = channels[key];
-              channel.id = key;
-              this.push('channels', channel);
+              if (channel) {
+                channel.id = key;
+                this.push('channels', channel);
+              }
             }, this);
+
+            /**
+            * Set the Lines up
+            */
+            this.set('lines', []);
+            let lines = payload.data.lines;
+            Object.keys(lines).forEach(function(key) {
+              var line = lines[key];
+              if (line) {
+                line.id = key;
+                this.push('lines', line);
+              }
+            }, this);
+
             this.diff = Date.now()-payload.data.server_time;
             this.version = payload.data.server_version || 'unknown version';
             if (this.debug) {
@@ -436,14 +461,20 @@
           case 'channelUpdate':
             var indices = this._getIndices();
             Object.keys(payload.data).forEach(function(key) {
+              let channel = payload.data[key];
+              if (channel) channel.id = key;
               if (indices.hasOwnProperty(key)) {
-                var index = indices[key],
-                    channel = payload.data[key];
-                channel.id = key;
-                if ('ring' != this.channels[index].mode && 'ring' == channel.mode && 'incoming' == channel.direction && channel.contact) {
-                  this._showDesktopNotification('Incoming call from ' + channel.contact.number);
-                } 
-                this.set('channels.' + index, channel);
+                var index = indices[key];
+                if (channel) {
+                  if ('ring' != this.channels[index].mode && 'ring' == channel.mode && 'incoming' == channel.direction && channel.contact) {
+                    this._showDesktopNotification('Incoming call from ' + channel.contact.number);
+                  } 
+                  this.set('channels.' + index, channel);
+                } else {
+                  this.splice('channels', index, 1);
+                }
+              } else {
+                this.push('channels', channel);
               }
             }, this);
             break;
@@ -473,17 +504,19 @@
         }
       },
 
-      handleError: function(e) {
-        console.error(e);
-      },
-
       sendMessage: function(e) {
-        this.$['message-handler'].send(e.detail);
+        this.$['message-handler'].send(e.detail.event, e.detail.data);
       },
 
       _activeChannels: function(channels) {
         return channels.filter(function(channel) {
           return 'free' === channel.mode;
+        });
+      },
+
+      _activeLines: function(lines) {
+        return lines.filter(function(line) {
+          return 'free' === line.status;
         });
       },
 
@@ -496,21 +529,7 @@
       },
 
       _tabChanged: function(tab) {
-        if (1 === tab) {
-          // window.setTimeout(function() {
-          //   var inbox = this.$['inbox'];
-          //   var last = inbox._getList().lastVisibleIndex;
-          //   if (isNaN(last) || last < 0) {
-          //     inbox._getList().scrollToIndex(0);
-          //     last = inbox._getList().lastVisibleIndex;
-          //   }
-          //   inbox._updateScrollIndex();
-          //   if (last > inbox.freshold) {
-          //     inbox.freshold = last;
-          //     inbox._updateLocalStorage();
-          //   }
-          // }.bind(this), 50);
-        }
+        // to do smth on tab change..
       },
 
       _spinnerVisible: function(hasInitialized) {
@@ -534,7 +553,7 @@
       },
 
       _truncated: function(str, lim) {
-        return (str.length > lim) ? str.substring(0, lim) + '…' : str;
+        return (str && str.length > lim) ? str.substring(0, lim) + '…' : str;
       },
 
       _getURLParameter: function(name) {
@@ -563,7 +582,7 @@
 
       _sendXMLHttpRequest: function(e, params) {
         var a = document.createElement('a');
-        a.href = window.__socket.url;
+        a.href = this.$['message-handler'].socket.url;
         // var ajax = document.querySelector('iron-ajax');
         const ajax = this.$.ajax;
         if (!ajax) {
@@ -584,6 +603,16 @@
       _handleAjaxResponse: function(r) {
         console.log(r);
       },
+
+      _findMessageIndex(message) {
+        let type = message.type === 'sms_in' ? 'inbox' : 'outbox';
+        let mailBox = this.get(type);
+        for(let i = mailBox.length - 1; i >= 0; --i) {
+          if (message.timestamp >= mailBox[i].timestamp && message.id !== mailBox[i].id) return -1;
+          if (message.id === mailBox[i].id) return i;
+        }
+        return -1;
+      }
 
     });
 

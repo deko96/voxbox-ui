@@ -2,64 +2,87 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="confirm-delete-dialog.html">
 <link rel="import" href="message-controls.html">
-<link rel="import" href="message-details.html">
-<link rel="import" href="message-list-behavior.html">
-<link rel="import" href="message-list-item.html">
-<link rel="import" href="message-list-styles.html">
+<!-- <link rel="import" href="message-details.html"> -->
+<link rel="import" href="../core/list-styles.html">
+<link rel="import" href="../core/list-item.html">
+<link rel="import" href="../core/list-behavior.html">
+<link rel="import" href="../core/item-details-dialog.html">
 
 <dom-module id="message-outbox">
   <template>
-    <style include="message-list-styles"></style>
+    <style include="list-styles"></style>
+    
+    <!-- Confirm Message Delete Dialog -->
     <confirm-delete-dialog 
       id                      = "confirm-delete-dialog" 
       on-delete-confirmed     = "_handleDeleteSelection"
       selection-size          = "[[selectionSize]]">
     </confirm-delete-dialog>
-    <message-details 
+    <!-- / Confirm Message Delete Dialog -->
+
+    <!-- Message Details Dialog -->
+    <item-details-dialog 
       id                      = "details"
       channels                = "[[channels]]"
+      lines                   = "[[lines]]"
+      on-message              = "_forwardMessage"
       on-delete-item          = "_handleDeleteConfirmed"
       on-next                 = "showNextMessage"
       on-prev                 = "showPreviousMessage"
       on-sms-out              = "_handleSMSOut">
-    </message-details>
-    <div
-      class                   = "no-messages"
-      hidden$                 = "[[!isEmpty]]">
-      <paper-material>
-        There are no messages here.
-      </paper-material>
-    </div>
-    <iron-list
-      id                      = "list"
-      as                      = "item"
-      selected-items          = "{{selection}}"
-      on-scroll               = "onScroll"
-      items                   = "[[messages]]"
-      max-physical-count      = "1000"
-      multi-selection>
-      <template>
-        <message-list-item
-          on-tap              = "onTap"
-          on-selected-toggled = "onSelectedToggled"
-          on-show-details     = "onShowDetails"
-          select-mode         = "[[hasSelection]]"
-          selected            = "[[selected]]"
-          item                = "[[item]]"
-          outgoing>
-        </message-list-item>
-      </template>
-    </iron-list>
-    <message-controls
+    </item-details-dialog>
+    <!-- / Message Details Dialog -->
+
+    <!-- No Messages Block -->
+    <template is="dom-if" if="[[isEmpty]]">
+      <div
+        class                   = "no-items">
+        <paper-material>
+          There are no messages here.
+        </paper-material>
+      </div>
+    </template>
+    <!-- / No Messages Block -->
+
+    <!-- Message Controls Action Bar -->
+    <list-controls
       id                      = "controls"
       on-iron-resize          = "onResize"
       on-select-all           = "onSelectAll"
       on-unselect-all         = "onUnselectAll"
       on-delete-selection     = "onDeleteSelection"
+      on-toggle-grid          = "onToggleGrid"
       has-selection           = "[[hasSelection]]"
       selection-size          = "[[selectionSize]]"
-      outgoing>
-    </message-controls>
+      grid-selected           = "[[gridSelected]]"
+      grid-mode               = "{{gridMode}}"
+      favorite-options        = "[[favoritable]]">
+    </list-controls>
+    <!-- / Message Controls Action Bar -->
+
+    <!-- Messages List -->
+    <iron-list
+      id                      = "list"
+      as                      = "item"
+      selected-items          = "{{selection}}"
+      on-scroll               = "onScroll"
+      items                   = "[[items]]"
+      max-physical-count      = "1000"
+      grid$                   = "[[gridMode]]"
+      multi-selection>
+      <template>
+        <list-item
+          on-tap              = "onTap"
+          on-selected-toggled = "onSelectedToggled"
+          on-show-details     = "onShowDetails"
+          select-mode         = "[[hasSelection]]"
+          selected            = "[[selected]]"
+          grid                = "[[gridMode]]"
+          item                = "[[item]]">
+        </list-item>
+      </template>
+    </iron-list>
+    <!-- / Messages List -->    
   </template>
   <script>
 
@@ -68,27 +91,59 @@
       is: 'message-outbox',
 
       properties: {
+        gridMode: {
+          type: Boolean
+        },
+        gridSelected: {
+          type: Boolean,
+          value: true
+        },
+        favoritable: {
+          type: Boolean,
+          value: false
+        },
         isEmpty: {
           type: Boolean,
           value: false,
         },
       },
-
       behaviors: [
-        MessageListBehavior,
+        ListBehavior,
       ],
 
       observers: [
-        'updateIsEmpty(messages, messages.*)',
+        'updateIsEmpty(items, items.*)',
       ],
 
       onScroll: function() { },
 
       onTap: function(e) {
-        if (this.hasSelection && ['checkboxContainer', 'icon'].indexOf(e.target.id) == -1) {
-          var list = this._getList();
-          e.model.selected ? list.deselectItem(e.model.index) 
-                           : list.selectItem(e.model.index);
+        let target = e.__target || e.target;
+        if (e.path) {
+          target = e.path[0];
+        }
+        if (!this.hasSelection) return;
+        if (['PAPER-CHECKBOX', 'IRON-ICON'].includes(target.tagName)) return;
+        if (target.tagName === 'DIV' && target.id === 'checkboxContainer') return;
+
+        const list = this.$.list;
+        if (e.model.selected)
+          list.deselectIndex(e.model.index);
+        else
+          list.selectIndex(e.model.index);
+        // if (this.hasSelection && ['checkboxContainer', 'icon'].indexOf(e.target.id) == -1) {
+        //   var list = this._getList();
+        //   e.model.selected ? list.deselectItem(e.model.index) 
+        //                    : list.selectItem(e.model.index);
+        // }
+      },
+
+      onSelectedToggled: function(e) {
+        const list = this.$.list;
+        if (e.model.selected) {
+          list.deselectIndex(e.model.index);
+        } else {
+          list.selectIndex(e.model.index);
         }
       },
 

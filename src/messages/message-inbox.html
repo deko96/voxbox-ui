@@ -6,18 +6,17 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="confirm-delete-dialog.html">
 <link rel="import" href="message-compose-dialog.html">
-<link rel="import" href="message-controls.html">
-<link rel="import" href="message-details.html">
-<link rel="import" href="message-grid-item.html">
-<link rel="import" href="message-list-behavior.html">
-<link rel="import" href="message-list-item.html">
-<link rel="import" href="message-list-styles.html">
-<link rel="import" href="message-item.html">
+<!-- <link rel="import" href="message-controls.html"> -->
+<link rel="import" href="../core/list-styles.html">
+<link rel="import" href="../core/list-behavior.html">
+<link rel="import" href="../core/list-controls.html">
+<link rel="import" href="../core/list-item.html">
+<link rel="import" href="../core/item-details-dialog.html">
 <link rel="import" href="../core/spinner-backdrop.html">
 
 <dom-module id="message-inbox">
   <template>
-    <style include="message-list-styles"></style>
+    <style include="list-styles"></style>
     <style>
       paper-fab {
         position: fixed;
@@ -53,35 +52,38 @@
     <!-- / Confirm Message Delete Dialog -->
 
     <!-- Message Details Dialog -->
-    <message-details 
+    <item-details-dialog 
       id                      = "details"
       channels                = "[[channels]]"
+      lines                   = "[[lines]]"
       on-message              = "_forwardMessage"
       on-delete-item          = "_handleDeleteConfirmed"
       on-next                 = "showNextMessage"
       on-prev                 = "showPreviousMessage"
       on-sms-out              = "_handleSMSOut">
-    </message-details>
+    </item-details-dialog>
     <!-- / Message Details Dialog -->
 
     <!-- No Messages Block -->
-    <div
-      class                   = "no-messages"
-      hidden$                 = "[[!isEmpty]]">
-      <paper-material>
-        There are no messages here.
-      </paper-material>
-    </div>
+    <template is="dom-if" if="[[isEmpty]]">
+      <div
+        class                   = "no-items">
+        <paper-material>
+          There are no messages here.
+        </paper-material>
+      </div>
+    </template>
     <!-- / No Messages Block -->
 
     <!-- Scroll To Bottom Fab Button -->
-    <paper-fab
-      hidden$                 = "[[atEnd]]"
-      class                   = "scroll-button"
-      on-tap                  = "_scrollToLast"
-      icon                    = "hardware:keyboard-arrow-down"
-      mini>
-    </paper-fab>
+    <template is="dom-if" if="[[!atEnd]]">
+      <paper-fab
+        class                   = "scroll-button"
+        on-tap                  = "_scrollToLast"
+        icon                    = "hardware:keyboard-arrow-down"
+        mini>
+      </paper-fab>
+    </template>
     <!-- / Scroll To Bottom Fab Button -->
 
     <!-- Open Message Dialog Fab Button -->
@@ -93,7 +95,7 @@
     <!-- / Open Message Dialog Fab Button -->
 
     <!-- Message Controls Action Bar -->
-    <message-controls
+    <list-controls
       id                      = "controls"
       is-empty                = "[[isEmpty]]"
       on-iron-resize          = "onResize"
@@ -107,14 +109,16 @@
       filter-starred          = "{{filterStarred}}"
       has-selection           = "[[hasSelection]]"
       selection-size          = "[[selectionSize]]"
-      grid-mode               = "{{gridMode}}">
-    </message-controls>
+      grid-selected           = "[[gridSelected]]"
+      grid-mode               = "{{gridMode}}"
+      favorite-options        = "[[favoritable]]">
+    </list-controls>
     <!-- / Message Controls Action Bar -->
     
     <!-- Messages Filter -->
     <array-filter
       id                      = "array-filter"
-      items                   = "{{messages}}"
+      items                   = "{{items}}"
       filtered                = "{{filtered}}"
       observe                 = "favorite"
       filter                  = "_filter">
@@ -129,300 +133,311 @@
       on-scroll               = "onScroll"
       items                   = "[[filtered]]"
       max-physical-count      = "1000"
-      grid$                   = "[[grid]]"
+      grid$                   = "[[gridMode]]"
       multi-selection>
       <template>
-        <message-item
+        <list-item
           on-tap              = "onTap"
           on-selected-toggled = "onSelectedToggled"
           on-favorite-toggled = "onFavoriteToggled"
           on-show-details     = "onShowDetails"
           select-mode         = "[[hasSelection]]"
           selected            = "[[selected]]"
-          favorite            = "[[item.favorite]]"
-          grid                = "[[grid]]"
-          item                = "[[item]]">
-        </message-item>
+          grid                = "[[gridMode]]"
+          item                = "[[item]]"
+          favoritable         = "[[favoritable]]">
+        </list-item>
       </template>
     </iron-list>
     <!-- / Messages List -->
   </template>
   <script>
+    HTMLImports.whenReady(function() {
+      Polymer({
 
-    Polymer({
+        is: 'message-inbox',
 
-      is: 'message-inbox',
-
-      properties: {
-        filtered: {
-          type: Array,
-          value: [],
-        },
-        filterStarred: {
-          type: Boolean,
-          value: false,
-          notify: true,
-        },
-        scrollIndex: {
-          type: Number,
-          value: 0,
-        },
-        atEnd: {
-          type: Boolean,
-          value: false,
-        },
-        isEmpty: {
-          type: Boolean,
-          value: false,
-        },
-        freshold: {
-          type: Number,
-          value: 0,
-        },
-        unread: {
-          type: Number,
-          computed: '_unreadCount(filtered, freshold, messages, messages.*)',
-          notify: true,
-        },
-        debug: {
-          type: Boolean,
-          value: false,
-        },
-        grid: {
-          type: Boolean,
-          value: false
-        }
-      },
-
-      behaviors: [
-        MessageListBehavior
-      ],
-
-      observers: [
-      ],
-
-      ready: function() {
-        this._messageCount = 0;
-        var freshold = localStorage.getItem('__voxbox__fresh');
-        if (freshold) {
-          this.freshold = Number(freshold);
-        }
-      },
-      onSelectedToggled: function(e) {
-        const list = this.$.list;
-        if (e.model.selected) {
-          list.deselectIndex(e.model.index);
-        } else {
-          list.selectIndex(e.model.index);
-        }
-      },
-
-      onFavoriteToggled: function(e) {
-        var value = !e.model.item.favorite;
-        this.set('filtered.' + e.model.index + '.favorite', value);
-        this.fire('message', {
-          event: (value ? 'messageFavoriteSet' : 'messageFavoriteUnset'),
-          data: [e.model.item.id],
-        });
-      },
-
-      onStarSelection: function() {
-        this._setPropertyOnSelected('favorite', true);
-      },
-
-      onUnstarSelection: function() {
-        this._setPropertyOnSelected('favorite', false);
-      },
-
-      onUnstarAll: function() {
-        var indices = [];
-        var ids = [];
-        this.filtered.forEach(function(item) { 
-          indices.push(this.messages.indexOf(item)); 
-          ids.push(item.id); 
-        }, this);
-        this._process(indices, function(index) {
-          this.set('messages.' + index + '.favorite', false);
-        }, function() {
-          this.$.list.clearSelection();
-          if (ids.length) {
-            this.fire('message', {
-              event: 'messageFavoriteUnset',
-              data: ids,
-            });
+        properties: {
+          filtered: {
+            type: Array,
+            value: [],
+          },
+          filterStarred: {
+            type: Boolean,
+            value: false,
+            notify: true,
+          },
+          scrollIndex: {
+            type: Number,
+            value: 0,
+          },
+          atEnd: {
+            type: Boolean,
+            value: false,
+          },
+          isEmpty: {
+            type: Boolean,
+            value: false,
+          },
+          freshold: {
+            type: Number,
+            value: 0,
+          },
+          unread: {
+            type: Number,
+            computed: '_unreadCount(filtered, freshold, items, items.*)',
+            notify: true,
+          },
+          debug: {
+            type: Boolean,
+            value: false,
+          },
+          gridMode: {
+            type: Boolean
+          },
+          gridSelected: {
+            type: Boolean,
+            value: true
+          },
+          favoritable: {
+            type: Boolean,
+            value: true
           }
-        });
-        this.filterStarred = false;
-      },
+        },
+        behaviors: [
+          ListBehavior
+        ],
 
-      onScroll: function() {
-        this._updateScrollIndex();
-        var last = this._getList().lastVisibleIndex;
-        if (last > this.freshold) {
-          this.freshold = last;
-        }
-        if (this._scrollTimeout) {
-          window.clearTimeout(this._scrollTimeout);
-        }
-        this._scrollTimeout = window.setTimeout(function() {
-          this._updateLocalStorage();
-        }.bind(this), 100);
-      },
+        observers: [
+          '_filterStarredChanged(filterStarred)',
+          '_updateIsEmpty(filtered, filtered.*)'
+        ],
 
-      onTap: function(e) {
-        const target = e.__target;
-        if (!this.hasSelection) return;
-        if (['PAPER-CHECKBOX', 'IRON-ICON'].includes(target.tagName)) return;
-        if (target.tagName === 'DIV' && target.id === 'checkboxContainer') return;
-        
-        const list = this.$.list;
-        if (e.model.selected)
-          list.deselectIndex(e.model.index);
-        else
-          list.selectIndex(e.model.index);
-      },
+        ready: function() {
+          this._messageCount = 0;
+          var freshold = localStorage.getItem('__voxbox__fresh');
+          if (freshold) {
+            this.freshold = Number(freshold);
+          }
+        },
+        onSelectedToggled: function(e) {
+          const list = this.$.list;
+          if (e.model.selected) {
+            list.deselectIndex(e.model.index);
+          } else {
+            list.selectIndex(e.model.index);
+          }
+        },
 
-      _setPropertyOnSelected: function(prop, value) {
-        var selection = this.selection.filter(function(item) { 
-          var current = ('boolean' === typeof(value)) ? !!item[prop] : item[prop];
-          return current != value; 
-        }, this);
-        var ids = [];
-        this._process(selection, function(item) {
-          this.set('filtered.' + this.filtered.indexOf(item) + '.' + prop, value);
-          ids.push(item.id);
-        }, function() {
-          this._getList().clearSelection();
-          // this._updateSelection();
-          if ('favorite' === prop) {
+        onFavoriteToggled: function(e) {
+          var value = !e.model.item.favorite;
+          this.set('filtered.' + e.model.index + '.favorite', value);
+          this.fire('message', {
+            event: (value ? 'messageFavoriteSet' : 'messageFavoriteUnset'),
+            data: [e.model.item.id],
+          });
+        },
+
+        onStarSelection: function() {
+          this._setPropertyOnSelected('favorite', true);
+        },
+
+        onUnstarSelection: function() {
+          this._setPropertyOnSelected('favorite', false);
+        },
+
+        onUnstarAll: function() {
+          var indices = [];
+          var ids = [];
+          this.filtered.forEach(function(item) { 
+            indices.push(this.items.indexOf(item)); 
+            ids.push(item.id); 
+          }, this);
+          this._process(indices, function(index) {
+            this.set('items.' + index + '.favorite', false);
+          }, function() {
+            this.$.list.clearSelection();
             if (ids.length) {
               this.fire('message', {
-                event: (value ? 'messageFavoriteSet' : 'messageFavoriteUnset'),
+                event: 'messageFavoriteUnset',
                 data: ids,
               });
             }
-          } else {
-            // In the future, implement other properties here
+          });
+          this.filterStarred = false;
+        },
+
+        onScroll: function() {
+          this._updateScrollIndex();
+          var last = this._getList().lastVisibleIndex;
+          if (last > this.freshold) {
+            this.freshold = last;
           }
-        });
-      },
+          if (this._scrollTimeout) {
+            window.clearTimeout(this._scrollTimeout);
+          }
+          this._scrollTimeout = window.setTimeout(function() {
+            this._updateLocalStorage();
+          }.bind(this), 100);
+        },
 
-      _filterStarredChanged: function(filterStarred) {
-        if (!filterStarred) {
-          this.messages = JSON.parse(JSON.stringify(this.messages));
-        }
-        this.$['array-filter'].update();
-        this.$.list.clearSelection();
-        this.$.grid.clearSelection();
-        this.selection = [];
+        onTap: function(e) {
+          let target = e.__target || e.target;
+          if (e.path) {
+            target = e.path[0];
+          }
+          if (!this.hasSelection) return;
+          if (['PAPER-CHECKBOX', 'IRON-ICON'].includes(target.tagName)) return;
+          if (target.tagName === 'DIV' && target.id === 'checkboxContainer') return;
 
-        var index = this.scrollIndex;
-        if (!filterStarred) {
-          // There must be a cleaner way to do this!
-          window.setTimeout(function() {
-            this._getList().scrollToIndex(index);
-            this._updateScrollIndex();
-          }.bind(this), 2);
-        }
-      },
+          const list = this.$.list;
+          if (e.model.selected)
+            list.deselectIndex(e.model.index);
+          else
+            list.selectIndex(e.model.index);
+        },
 
-      // _gridModeChanged: function(gridMode) {
-      //   var list = this._getList();
-      //   this.updateGeometry();
-      //   list.scrollToIndex(this.scrollIndex);
-      //   this.$.list.clearSelection();
-      //   this.$.grid.clearSelection();
-      //   this.selection = [];
-      // },
+        _setPropertyOnSelected: function(prop, value) {
+          var selection = this.selection.filter(function(item) { 
+            var current = ('boolean' === typeof(value)) ? !!item[prop] : item[prop];
+            return current != value; 
+          }, this);
+          var ids = [];
+          this._process(selection, function(item) {
+            this.set('filtered.' + this.filtered.indexOf(item) + '.' + prop, value);
+            ids.push(item.id);
+          }, function() {
+            this._getList().clearSelection();
+            // this._updateSelection();
+            if ('favorite' === prop) {
+              if (ids.length) {
+                this.fire('message', {
+                  event: (value ? 'messageFavoriteSet' : 'messageFavoriteUnset'),
+                  data: ids,
+                });
+              }
+            } else {
+              // In the future, implement other properties here
+            }
+          });
+        },
 
-      _updateScrollIndex: function() {
-        if (this.filterStarred) {
-          this.atEnd = true;
-        } else {
-          var list = this._getList();
-          this.scrollIndex = list.firstVisibleIndex;
-          this.atEnd = this.isEmpty 
-            ? true 
-            : list.lastVisibleIndex >= Math.max(0, this.filtered.length - 3);
-        }
-      },
+        _filterStarredChanged: function(filterStarred) {
+          if (!filterStarred) {
+            this.items = JSON.parse(JSON.stringify(this.items));
+          }
+          this.$['array-filter'].update();
+          this.$.list.clearSelection();
+          // this.selection = [];
 
-      _scrollToLast: function() {
-        this._getList().scrollToIndex(this.filtered.length - 1);
-        this.freshold = this.filtered.length;
-        this._updateLocalStorage();
-      },
+          var index = this.scrollIndex;
+          if (!filterStarred) {
+            // There must be a cleaner way to do this!
+            window.setTimeout(function() {
+              this.$.list.scrollToIndex(index);
+              this._updateScrollIndex();
+            }.bind(this), 2);
+          }
+        },
 
-      _filter: function(item) {
-        if (this.filterStarred) {
-          return !!item.favorite;
-        }
-        return true;
-      },
+        // _gridModeChanged: function(gridMode) {
+        //   var list = this._getList();
+        //   this.updateGeometry();
+        //   list.scrollToIndex(this.scrollIndex);
+        //   this.$.list.clearSelection();
+        //   this.$.grid.clearSelection();
+        //   this.selection = [];
+        // },
 
-      _updateIsEmpty: function(filtered) {
-        var nothing = !filtered.length;
-        if (this.isEmpty != nothing) {
-          this.isEmpty = nothing;
-        }
-      },
+        _updateScrollIndex: function() {
+          if (this.filterStarred) {
+            this.atEnd = true;
+          } else {
+            var list = this._getList();
+            this.scrollIndex = list.firstVisibleIndex;
+            this.atEnd = this.isEmpty 
+              ? true 
+              : list.lastVisibleIndex >= Math.max(0, this.filtered.length - 3);
+          }
+        },
 
-      _unreadCount: function(filtered, freshold, messages) {
-        return Math.max(0, messages.length - this.freshold);
-      },
-
-      _getList: function() {
-        return this.$.list;
-        // return this.gridMode ? this.$.grid : this.$.list;
-      },
-
-      _selectAllComplete: function() {
-        // this._updateSelection();
-      },
-
-      // _updateSelection: function() {
-      //   console.log('updateSelection', this.listSelection);
-      //   // this.selection = [];
-      //   // var selection = this.listSelection;
-      //   // console.log(selection, 'updateSelection');
-      //   // if (selection) {
-      //   //   selection.forEach(function(item) {
-      //   //     this.push('selection', item);
-      //   //   }, this);
-      //   // }
-      // },
-
-      _openMessageDialog: function() {
-        var dialog = this.$['message-compose-dialog'];
-        Polymer.dom(document.querySelector('body')).appendChild(dialog);
-        dialog.open();
-      },
-
-      _afterMessageDelete: function(count) {
-        if (count) {
-          this.freshold = Math.max(0, this.freshold - count);
+        _scrollToLast: function() {
+          this._getList().scrollToIndex(this.filtered.length - 1);
+          this.freshold = this.filtered.length;
           this._updateLocalStorage();
-        }
-      },
+        },
 
-      _handleSendMessage: function() {
-        var dialog = this.$['message-compose-dialog'];
-        this._sendSMS({
-          type: 'sms_out',
-          endpoint: dialog.number,
-          content: dialog.message,
-          channel_id: ('__auto__' === dialog.channel ? null : dialog.channel),
-        });
-      },
+        _filter: function(item) {
+          if (this.filterStarred) {
+            return !!item.favorite;
+          }
+          return true;
+        },
 
-      _forwardMessage: function(e) {
-        this.fire('message', e.detail);
-      },
+        _updateIsEmpty: function(filtered) {
+          var nothing = !filtered.length;
+          if (this.isEmpty != nothing) {
+            this.isEmpty = nothing;
+          }
+        },
 
-      _updateLocalStorage: function() {
-        localStorage.setItem('__voxbox__fresh', this.freshold);
-      },
+        _unreadCount: function(filtered, freshold, items) {
+          return Math.max(0, items.length - this.freshold);
+        },
 
+        _getList: function() {
+          return this.$.list;
+          // return this.gridMode ? this.$.grid : this.$.list;
+        },
+
+        _selectAllComplete: function() {
+          // this._updateSelection();
+        },
+
+        // _updateSelection: function() {
+        //   console.log('updateSelection', this.listSelection);
+        //   // this.selection = [];
+        //   // var selection = this.listSelection;
+        //   // console.log(selection, 'updateSelection');
+        //   // if (selection) {
+        //   //   selection.forEach(function(item) {
+        //   //     this.push('selection', item);
+        //   //   }, this);
+        //   // }
+        // },
+
+        _openMessageDialog: function() {
+          var dialog = this.$['message-compose-dialog'];
+          Polymer.dom(document.querySelector('body')).appendChild(dialog);
+          dialog.open();
+        },
+
+        _afterMessageDelete: function(count) {
+          if (count) {
+            this.freshold = Math.max(0, this.freshold - count);
+            this._updateLocalStorage();
+          }
+        },
+
+        _handleSendMessage: function() {
+          var dialog = this.$['message-compose-dialog'];
+          this._sendSMS({
+            type: 'sms_out',
+            endpoint: dialog.number,
+            content: dialog.message,
+            channel_id: ('__auto__' === dialog.channel ? null : dialog.channel),
+          });
+        },
+
+        _forwardMessage: function(e) {
+          this.fire('message', e.detail);
+        },
+
+        _updateLocalStorage: function() {
+          localStorage.setItem('__voxbox__fresh', this.freshold);
+        },
+
+      });
     });
 
   </script>

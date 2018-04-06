@@ -111,21 +111,24 @@
               <iron-icon icon="star"></iron-icon>
               <span class="button-label">Star</span>
             </paper-button>
-            <paper-button 
-              on-tap   = "_unstarSelection"
-              disabled = "[[!hasSelection]]"
-              hidden$  = "[[filterStarred]]">
-              <iron-icon icon="star-border"></iron-icon>
-              <span class="button-label">Unstar</span>
-            </paper-button>
-            <paper-button 
-              on-tap   = "_unstarAll"
-              disabled = "[[isEmpty]]"
-              hidden$  = "[[!filterStarred]]"
-              class    = "select-all">
-              <iron-icon icon="star-border"></iron-icon>
-              <span class="button-label">Unstar all</span>
-            </paper-button>
+            <template is="dom-if" if="[[!filterStarred]]">
+              <paper-button 
+                on-tap   = "_unstarSelection"
+                disabled = "[[!hasSelection]]">
+                <iron-icon icon="star-border"></iron-icon>
+                <span class="button-label">Unstar</span>
+              </paper-button>
+            </template>
+            <template is="dom-if" if="[[filterStarred]]">
+              <paper-button 
+                on-tap   = "_unstarAll"
+                disabled = "[[isEmpty]]"
+                hidden$  = "[[!filterStarred]]"
+                class    = "select-all">
+                <iron-icon icon="star-border"></iron-icon>
+                <span class="button-label">Unstar all</span>
+              </paper-button>
+            </template>
           </template>
         </div>
       </div>
@@ -258,7 +261,8 @@
       },
 
       _toggleGridButtonVisible: function(outgoing, narrow) {
-        return !outgoing && !narrow;
+        return !narrow;
+        // return !outgoing && !narrow;
       },
 
       _containerClass: function(outgoing) {

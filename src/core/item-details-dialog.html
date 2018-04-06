@@ -5,10 +5,10 @@
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../channels/call-dialog.html">
-<link rel="import" href="confirm-delete-dialog.html">
-<link rel="import" href="message-compose-dialog.html">
+<link rel="import" href="../messages/confirm-delete-dialog.html">
+<link rel="import" href="../messages/message-compose-dialog.html">
 
-<dom-module id="message-details">
+<dom-module id="item-details-dialog">
   <template>
     <style include="iron-flex iron-flex-alignment"></style>
     <style>
@@ -22,7 +22,7 @@
       }
 
       .message-container {
-        @apply(--layout-horizontal);
+        @apply --layout-horizontal;
       }
 
       .message-container .nav {
@@ -61,7 +61,7 @@
     <call-dialog
       id                  = "call-dialog"
       on-confirmed        = "_handleCall"
-      channels            = "[[channels]]">
+      lines               = "[[lines]]">
     </call-dialog>
     <message-compose-dialog
       id                  = "message-compose-dialog"
@@ -120,7 +120,7 @@
   <script>
     Polymer({
 
-      is: 'message-details',
+      is: 'item-details-dialog',
 
       properties: {
         index: {

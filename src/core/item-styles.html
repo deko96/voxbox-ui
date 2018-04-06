@@ -1,0 +1,84 @@
+<dom-module id="item-styles">
+    <template>
+        <style>
+            :host {
+                padding: 0;
+            }
+
+            .list-item.list-item-container {
+                margin: 0 auto;
+                max-width: 650px;
+                min-height: 70px;
+                border-bottom: 1px solid #dadada;
+                background: white;
+            }
+            
+            .list-item.grid-item-container {
+                width: 290px;
+                height: 200px;
+                display: flex;
+                justify-content: space-between;
+                flex-direction: column;
+                margin: 2px;
+                background: white;
+            }
+
+            .grid-item-container .content {
+                height: 80px;
+                padding-top: 0;
+                word-wrap: break-word;
+            }
+
+            .controls {
+                align-self: flex-end;
+                padding: 5px;
+            }
+
+            paper-checkbox {
+                padding: 21px 10px;
+                --paper-checkbox-checked-color: rgb(0, 188, 212);
+                --paper-checkbox-checked-ink-color: rgb(0, 188, 212);
+            }
+
+            paper-item:focus::before,
+            paper-item:focus::after {
+                color: white;
+                opacity: 0;
+            }
+
+            .content {
+                padding: 11px;
+                font-size: 15px;
+            }
+
+            .content>.message-grid-item,
+            .content>.message-list-item {
+                overflow: hidden;
+                word-wrap: break-word;
+                line-height: 1.4;
+            }
+
+            .layout {
+                @apply --layout-horizontal;
+                align-items: center;
+            }
+
+            .date {
+                text-transform: uppercase;
+            }
+
+            .date>span {
+                font-size: 13px;
+            }
+
+            .star {
+                color: var(--paper-pink-a200);
+            }
+
+            .list-item.select-mode:hover {
+                background: #e5f8fa !important;
+                cursor: pointer;
+            }
+        </style>
+    <template>
+</dom-module>
