@@ -13,6 +13,28 @@
         display: flex;
       }
 
+      paper-fab#call-agents {
+        position: fixed;
+        right: 30px;
+        bottom: 100px;
+        z-index: 2;
+        --paper-fab-disabled-text: #fff;
+      }
+
+      paper-fab#call-agents.free {
+        --paper-fab-background: #1b5e20;
+      }
+
+      paper-fab#call-agents.defunct {
+        --paper-fab-background: #ffa726;
+        --paper-fab-disabled-background: #ffa726;
+      }
+
+      paper-fab#call-agents.busy {
+        --paper-fab-background: #e91e63;
+        --paper-fab-disabled-background: #e91e63;
+      }
+
       paper-fab {
         position: fixed;
         right: 30px;
@@ -33,7 +55,8 @@
     <call-dialog
       id                       = "call-dialog"
       on-confirmed             = "handleCall"
-      lines                    = "[[activeLines]]">
+      lines                    = "[[activeLines]]"
+      line                     = "[[forceLine]]">
     </call-dialog>
     <message-compose-dialog
       id                       = "message-compose-dialog"
@@ -68,6 +91,13 @@
         </channel-item>
       </template>
     </div>
+    <paper-fab
+      on-tap                   = "openCallDialogForAgents"
+      id                       = "call-agents"
+      class$                   = "[[agentsLineStatus]]"
+      disabled$                = "[[!canCallAgents]]"
+      icon                     = "hardware:headset-mic">
+    </paper-fab>
     <paper-fab 
        on-tap                  = "openCallDialog" 
        icon                    = "communication:dialpad">
@@ -95,6 +125,20 @@
         activeLines: {
           type: Array,
           computed: 'computedActiveLines(lines, lines.*)'
+        },
+        forceLine: {
+          type: String,
+          value: null
+        },
+        agentsLineStatus: {
+          type: String,
+          computed: 'computedAgentsLineStatus(lines, lines.*)',
+          notify: true
+        },
+        canCallAgents: {
+          type: Boolean,
+          computed: 'computedCanCallAgents(lines, lines.*)',
+          notify: true
         }
       },
 
@@ -203,6 +247,17 @@
 
       openCallDialog: function(e) {
         var dialog = this.$['call-dialog'];
+        this.forceLine = '__auto__';
+        Polymer.dom(document.querySelector('body')).appendChild(dialog);
+        dialog.open();
+        if (e && e.detail && 'object' !== typeof(e.detail)) {
+          dialog.channel = e.detail;
+        }
+      },
+
+      openCallDialogForAgents: function(e) {
+        var dialog = this.$['call-dialog'];
+        this.forceLine = this.getAgentsLine();
         Polymer.dom(document.querySelector('body')).appendChild(dialog);
         dialog.open();
         if (e && e.detail && 'object' !== typeof(e.detail)) {
@@ -242,6 +297,24 @@
         document.body.appendChild(toast); 
         toast.show();
       },
+
+      getAgentsLine: function() {
+        return this.lines.find(line => {
+          return line.agents ? true : false;
+        }).id;
+      },
+
+      computedAgentsLineStatus: function(lines) {
+        line = lines.find(line => line.id === this.getAgentsLine());
+        if (line) {
+          return line.status;
+        }
+        return null;
+      },
+
+      computedCanCallAgents: function(lines) {
+        return (this.agentsLineStatus === 'free') ? true : false;
+      }
 
     });
 

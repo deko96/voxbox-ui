@@ -33,6 +33,18 @@
         background: none;
       }
 
+      .agent-item {
+        --paper-item-icon-width: 32px;
+      }
+
+      .agent-item.online {
+        --iron-icon-fill-color: green;
+      }
+
+      .agent-item.offline {
+        --iron-icon-fill-color: red;
+      }
+
     </style>
     <paper-dialog
       modal
@@ -65,33 +77,33 @@
         </paper-radio-group>
       </div>
       <!-- Regular Input for Calling numbers -->
-      <template is="dom-if" if="[[!callAgent]]" restamp>
+      <!-- <template is="dom-if" if="[[!callAgent]]" restamp> -->
         <paper-input 
           required 
           auto-validate 
           id                   = "number-input"
           label                = "Number"
           value                = "{{number}}"
-          error-message        = "This field is required.">
+          error-message        = "This field is required."
+          hidden$              = "[[isCallingAgent]]">
         </paper-input>
-      </template>
+      <!-- </template> -->
       <!-- / Regular Input for Calling numbers -->
 
       <!-- Dropdown Input for Calling agents -->
-      <template is="dom-if" if="[[callAgent]]" restamp>
-        <paper-dropdown-menu label="Agents">
-          <paper-listbox slot="dropdown-content" selectedItem="{{number}}" on-iron-select="handleAgentChange">
-            <template is="dom-repeat" items="[[getAgents()]]">
-              <paper-item label="[[getAgentFullName(item)]]" value="[[getAgentNumber(item)]]">
-                <paper-item-body two-line>
-                  <div>[[getAgentFullName(item)]]</div>
-                  <div secondary>[[getAgentNumber(item)]]</div>
-                </paper-item-body>
-              </paper-item>
-            </template>
-          </paper-listbox>
-        </paper-dropdown-menu>
-      </template>
+      <paper-dropdown-menu label="Agents" class="agents-dropdown" horizontal-align="left" vertical-align="top" hidden$="[[!isCallingAgent]]">
+        <paper-listbox slot="dropdown-content" selectedItem="{{number}}" on-iron-select="handleAgentChange" class="dropdown-content">
+          <template is="dom-repeat" items="[[agents]]">
+            <paper-icon-item label="[[getAgentFullName(item)]]" value="[[getAgentNumber(item)]]" class$="[[getAgentPresence(item)]]">
+              <iron-icon icon="social:person" slot="item-icon"></iron-icon>
+              <paper-item-body two-line>
+                <div>[[getAgentFullName(item)]]</div>
+                <div secondary>[[getAgentNumber(item)]]</div>
+              </paper-item-body>
+            </paper--icon-item>
+          </template>
+        </paper-listbox>
+      </paper-dropdown-menu>
       <!-- / Dropdown Input for Calling agents -->
       
       <div class="buttons">
@@ -114,9 +126,15 @@
       is: 'call-dialog',
 
       properties: {
-        callAgent: {
+        isCallingAgent: {
           type: Boolean,
-          value: false
+          computed: '_computedIsCallingAgent(line)',
+          notify: true
+        },
+        agents: {
+          type: Array,
+          computed: '_computedAgents(line)',
+          notify: true
         },
         number: {
           type: String,
@@ -127,13 +145,13 @@
           type: String,
           value: '__auto__',
         },
-        lines: {
-          type: Array,
-          value: []
-        },
         line: {
           type: String,
           value: '__auto__'
+        },
+        lines: {
+          type: Array,
+          value: []
         }
       },
 
@@ -144,13 +162,8 @@
 
       reset: function() {
         this.number  = '';
-        this.line = '__auto__';
-        this.callAgent = false;
-        let numberInput = document.querySelector('number-input');
-        if (numberInput) {
-          numberInput.invalid = false;
-        }
-        // this.$['number-input'].invalid = false;
+        // this.line = '__auto__';
+        this.$['number-input'].invalid = false;
       },
 
       onClosed: function(event) {
@@ -169,11 +182,6 @@
         return line.id;
       },
 
-      getAgents: function() {
-        let line = this.lines.find(line => line.id === this.line);
-        return line ? line.agents : null;
-      },
-
       getAgentFullName: function(agent) {
         return [agent.firstname, agent.lastname].join(' ');
       },
@@ -182,20 +190,35 @@
         return agent.phone;
       },
 
-      handleLineChanged: function() {
-        let line = this.lines.find(line => line.id === this.line);
-        if (line && line.agents) {
-          this.callAgent = true;
+      getAgentPresence: function(agent) {
+        // Some stupid online/offline random simulation
+        if (Math.floor(Math.random() * 100) % 2 === 0) {
+          return 'agent-item online';
         } else {
-          this.callAgent = false;
+          return 'agent-item offline'
         }
+      },
+
+      handleLineChanged: function() {
+        line = this.lines.find(line => line.id === this.line);
         this.number = '';
+        this.$['number-input'].invalid = false;
       },
 
       handleAgentChange: function(event, agent) {
         if (agent && agent.item.value) {
           this.number = agent.item.value;
         }
+      },
+
+      _computedIsCallingAgent: function(line) {
+        line = this.lines.find(l => l.id === line);
+        return (line && line.agents) ? true : false;
+      },
+      
+      _computedAgents: function(line) {
+        line = this.lines.find(l => l.id === line);
+        return (line && line.agents) ? line.agents : null;
       }
 
     });
