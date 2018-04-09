@@ -2,11 +2,10 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="confirm-delete-dialog.html">
 <link rel="import" href="message-controls.html">
-<!-- <link rel="import" href="message-details.html"> -->
 <link rel="import" href="../core/list-styles.html">
-<link rel="import" href="../core/list-item.html">
 <link rel="import" href="../core/list-behavior.html">
 <link rel="import" href="../core/item-details-dialog.html">
+<link rel="import" href="message-item.html">
 
 <dom-module id="message-outbox">
   <template>
@@ -71,7 +70,7 @@
       grid$                   = "[[gridMode]]"
       multi-selection>
       <template>
-        <list-item
+        <message-item
           on-tap              = "onTap"
           on-selected-toggled = "onSelectedToggled"
           on-show-details     = "onShowDetails"
@@ -79,7 +78,7 @@
           selected            = "[[selected]]"
           grid                = "[[gridMode]]"
           item                = "[[item]]">
-        </list-item>
+        </message-item>
       </template>
     </iron-list>
     <!-- / Messages List -->    

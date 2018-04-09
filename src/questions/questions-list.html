@@ -5,7 +5,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../core/list-behavior.html">
 <link rel="import" href="../core/list-styles.html">
-<link rel="import" href="../core/list-item.html">
+<link rel="import" href="question-item.html">
 
 <dom-module id="questions-list">
     <template>
@@ -76,7 +76,7 @@
             grid$                   = "[[gridMode]]"
             multi-selection>
             <template>
-                <list-item
+                <question-item
                     on-tap              = "onTap"
                     on-selected-toggled = "onSelectedToggled"
                     on-favorite-toggled = "onFavoriteToggled"
@@ -87,7 +87,7 @@
                     grid                = "[[gridMode]]"
                     item                = "[[item]]"
                     favoritable         = "[[favoritable]]">
-                </list-item>
+                </question-item>
             </template>
         </iron-list>
         <!-- Questions List -->

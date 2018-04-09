@@ -15,7 +15,7 @@
             
             .list-item.grid-item-container {
                 width: 290px;
-                height: 200px;
+                height: 230px;
                 display: flex;
                 justify-content: space-between;
                 flex-direction: column;
@@ -30,8 +30,8 @@
             }
 
             .controls {
-                align-self: flex-end;
                 padding: 5px;
+                margin-left: auto;
             }
 
             paper-checkbox {
@@ -78,6 +78,22 @@
             .list-item.select-mode:hover {
                 background: #e5f8fa !important;
                 cursor: pointer;
+            }
+
+            .item-footer {
+                display: flex;
+                display: -webkit-box;
+                align-self: flex-end;
+                width: 100%;
+            }
+
+            .bottom-left-content {
+                max-width: 64%;
+                overflow: hidden;
+                align-self: center;
+                padding: 5px;
+                margin-top: 5px;
+                padding: 10px 5px 5px 5px;
             }
         </style>
     <template>

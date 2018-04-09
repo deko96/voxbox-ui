@@ -263,10 +263,7 @@
         },
         questions: {
           type: Array,
-          value: [
-            { id: 1, timestamp: Date.now() - 50000, content: 'This is my second question!', tags: ['Test', 'Question']},
-            { id: 2, timestamp: Date.now() - 120000, content: 'This is my first question!', tags: ['Test', 'Question']}            
-          ]
+          value: []
         },
         channels: {
           type: Array,
@@ -401,6 +398,9 @@
               document.body.appendChild(toast); 
               toast.show();
             }
+            break;
+          case 'questionsUpdate':
+            this.set('questions', payload.data);
             break;
           case 'initialize':
             if (this.debug) {

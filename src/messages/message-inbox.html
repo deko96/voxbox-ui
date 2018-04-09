@@ -6,13 +6,13 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="confirm-delete-dialog.html">
 <link rel="import" href="message-compose-dialog.html">
-<!-- <link rel="import" href="message-controls.html"> -->
 <link rel="import" href="../core/list-styles.html">
 <link rel="import" href="../core/list-behavior.html">
 <link rel="import" href="../core/list-controls.html">
-<link rel="import" href="../core/list-item.html">
+<!-- <link rel="import" href="../core/list-item.html"> -->
 <link rel="import" href="../core/item-details-dialog.html">
 <link rel="import" href="../core/spinner-backdrop.html">
+<link rel="import" href="message-item.html">
 
 <dom-module id="message-inbox">
   <template>
@@ -136,7 +136,7 @@
       grid$                   = "[[gridMode]]"
       multi-selection>
       <template>
-        <list-item
+        <message-item
           on-tap              = "onTap"
           on-selected-toggled = "onSelectedToggled"
           on-favorite-toggled = "onFavoriteToggled"
@@ -146,7 +146,7 @@
           grid                = "[[gridMode]]"
           item                = "[[item]]"
           favoritable         = "[[favoritable]]">
-        </list-item>
+        </message-item>
       </template>
     </iron-list>
     <!-- / Messages List -->
@@ -435,8 +435,7 @@
 
         _updateLocalStorage: function() {
           localStorage.setItem('__voxbox__fresh', this.freshold);
-        },
-
+        }
       });
     });
 
