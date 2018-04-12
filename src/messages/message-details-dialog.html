@@ -1,0 +1,67 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../core/item-details-dialog.html">
+
+<dom-module id="message-details-dialog">
+    <template>
+        <item-details-dialog
+            id              = "dialog"
+            can-call        = "[[canCall]]"
+            can-send-sms    = "[[canSendSms]]"
+            can-delete      = "[[canDelete]]"
+            index           = "{{index}}"
+            item            = "[[item]]"
+            channels        = "[[channels]]"
+            lines           = "[[lines]]">
+            <div slot="content">
+                <p>
+                    <b>From:</b> [[item.endpoint]]
+                    <br />
+                    <b>Sent:</b> [[_formatDate(item.timestamp)]]
+                </p>
+                <p>[[item.content]]</p>
+            </div>
+        </item-details-dialog>
+    </template>
+    <script>
+        Polymer({
+
+            is: 'message-details-dialog',
+
+            properties: {
+                canCall: {
+                    type: Boolean,
+                    value: true
+                },
+                canSendSms: {
+                    type: Boolean,
+                    value: true
+                },
+                canDelete: {
+                    type: Boolean,
+                    value: true
+                },
+                index: {
+                    type: Number,
+                    value: 0,
+                },
+                item: {
+                    type: Object,
+                    value: {}
+                }
+            },
+
+            open: function () {
+                this.$.dialog.open();
+            },
+
+            close: function () {
+                this.$.dialog.close();
+            },
+
+            _formatDate: function (stamp) {
+                return moment(Number(stamp)).format("ddd, MMM Do YYYY, h:mm:ss a");
+            },
+
+        });
+    </script>
+</dom-module>

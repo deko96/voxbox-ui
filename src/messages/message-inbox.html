@@ -9,9 +9,8 @@
 <link rel="import" href="../core/list-styles.html">
 <link rel="import" href="../core/list-behavior.html">
 <link rel="import" href="../core/list-controls.html">
-<!-- <link rel="import" href="../core/list-item.html"> -->
-<link rel="import" href="../core/item-details-dialog.html">
 <link rel="import" href="../core/spinner-backdrop.html">
+<link rel="import" href="message-details-dialog.html">
 <link rel="import" href="message-item.html">
 
 <dom-module id="message-inbox">
@@ -52,7 +51,7 @@
     <!-- / Confirm Message Delete Dialog -->
 
     <!-- Message Details Dialog -->
-    <item-details-dialog 
+    <message-details-dialog
       id                      = "details"
       channels                = "[[channels]]"
       lines                   = "[[lines]]"
@@ -61,7 +60,7 @@
       on-next                 = "showNextMessage"
       on-prev                 = "showPreviousMessage"
       on-sms-out              = "_handleSMSOut">
-    </item-details-dialog>
+    </message-details-dialog>
     <!-- / Message Details Dialog -->
 
     <!-- No Messages Block -->
@@ -114,7 +113,7 @@
       favorite-options        = "[[favoritable]]">
     </list-controls>
     <!-- / Message Controls Action Bar -->
-    
+
     <!-- Messages Filter -->
     <array-filter
       id                      = "array-filter"
@@ -435,6 +434,13 @@
 
         _updateLocalStorage: function() {
           localStorage.setItem('__voxbox__fresh', this.freshold);
+        },
+
+        onShowDetails: function (e) {
+            var details = this.$.details;
+            Polymer.dom(document.querySelector('body')).appendChild(details);
+            this._updateDialog(details, e.model.item, e.model.index);
+            details.open();
         }
       });
     });

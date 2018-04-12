@@ -5,7 +5,6 @@
 <dom-module id="error-dialog">
   <template>
     <style>
-
       paper-dialog {
         min-height: 130px;
       }
@@ -13,19 +12,12 @@
       paper-button {
         color: rgb(0, 188, 212);
       }
-
     </style>
-    <paper-dialog 
-      modal
-      id                     = "dialog"
-      style                  = "width: 550px;"
-      opened                 = "{{opened}}">
+    <paper-dialog modal id="dialog" style="width: 550px;" opened="{{opened}}">
       <h2>[[title]]</h2>
       <p>[[message]]</p>
       <slot></slot>
-      <template 
-        is                   = "dom-if" 
-        if                   = "[[canDismiss]]">
+      <template is="dom-if" if="[[canDismiss]]">
         <div class="buttons">
           <paper-button dialog-dismiss>
             Ok
@@ -35,7 +27,6 @@
     </paper-dialog>
   </template>
   <script>
-
     Polymer({
 
       is: 'error-dialog',
@@ -59,15 +50,14 @@
         },
       },
 
-      open: function() {
+      open: function () {
         this.$.dialog.open();
       },
 
-      close: function() {
+      close: function () {
         this.$.dialog.close();
       },
 
     });
-
   </script>
 </dom-module>

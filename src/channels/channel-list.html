@@ -143,18 +143,18 @@
       },
 
       behaviors: [
-        Polymer.AppNetworkStatusBehavior, 
+        Polymer.AppNetworkStatusBehavior,
       ],
 
       onCallNumber: function(e) {
         var dialog = this.$['call-dialog'];
         Polymer.dom(document.querySelector('body')).appendChild(dialog);
-        dialog.open();
         var channel = e.detail;
         if (channel) {
-          dialog.number = channel.number;
-          dialog.channel = channel.id;
+          dialog.setLine(channel.id.split(':')[0]);
+          dialog.setAgent(channel.number);
         }
+        dialog.open();
       },
 
       onSendMessage: function(e) {
@@ -247,7 +247,8 @@
 
       openCallDialog: function(e) {
         var dialog = this.$['call-dialog'];
-        this.forceLine = '__auto__';
+        dialog.setAgent('');
+        dialog.setLine('__auto__');
         Polymer.dom(document.querySelector('body')).appendChild(dialog);
         dialog.open();
         if (e && e.detail && 'object' !== typeof(e.detail)) {
@@ -257,7 +258,8 @@
 
       openCallDialogForAgents: function(e) {
         var dialog = this.$['call-dialog'];
-        this.forceLine = this.getAgentsLine();
+        dialog.setAgent('');
+        dialog.setLine(this.getAgentsLine());
         Polymer.dom(document.querySelector('body')).appendChild(dialog);
         dialog.open();
         if (e && e.detail && 'object' !== typeof(e.detail)) {
@@ -288,6 +290,7 @@
           event: 'callNumber',
           data: {
             number: dialog.number,
+            waitAnswer: dialog.waitAnswer,
             mode: 'master',
             line_id: ('__auto__' === dialog.line ? null : dialog.line),
           },

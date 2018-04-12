@@ -5,6 +5,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../core/list-behavior.html">
 <link rel="import" href="../core/list-styles.html">
+<link rel="import" href="question-details-dialog.html">
 <link rel="import" href="question-item.html">
 
 <dom-module id="questions-list">
@@ -12,7 +13,7 @@
         <style include="list-styles"></style>
 
         <!-- Question Details Dialog -->
-        <item-details-dialog 
+        <question-details-dialog
             id                      = "details"
             channels                = "[[channels]]"
             on-message              = "_forwardMessage"
@@ -20,7 +21,7 @@
             on-next                 = "showNextMessage"
             on-prev                 = "showPreviousMessage"
             on-sms-out              = "_handleSMSOut">
-        </item-details-dialog>
+        </question-details-dialog>
         <!-- / Question Details Dialog -->
 
         <!-- Messages Filter -->
@@ -171,8 +172,8 @@
                 var value = !e.model.item.favorite;
                 this.set('filtered.' + e.model.index + '.favorite', value);
                 this.fire('message', {
-                    event: (value ? 'messageFavoriteSet' : 'messageFavoriteUnset'),
-                    data: [e.model.item.id],
+                    event: (value ? 'questionFavorite' : 'questionUnfavorite'),
+                    data: [e.model.item.zammad_id],
                 });
             },
             _filter: function(item) {
@@ -214,6 +215,30 @@
                         ? true 
                         : list.lastVisibleIndex >= Math.max(0, this.filtered.length - 3);
                 }
+            },
+            onShowDetails: function (e) {
+                var details = this.$.details;
+                Polymer.dom(document.querySelector('body')).appendChild(details);
+                this._updateDialog(details, e.model.item, e.model.index);
+                details.open();
+            },
+
+            onStarSelection: function(e) {
+                let ids = [];
+                this.selection.forEach(item => ids.push(item.zammad_id));
+                this.fire('message', {
+                    event: 'questionFavorite',
+                    data: ids
+                });
+            },
+
+            onUnstarSelection: function(e) {
+                let ids = [];
+                this.selection.forEach(item => ids.push(item.zammad_id));
+                this.fire('message', {
+                    event: 'questionUnfavorite',
+                    data: ids
+                });
             }
         });
     </script>

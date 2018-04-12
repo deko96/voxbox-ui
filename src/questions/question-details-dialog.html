@@ -1,0 +1,69 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../core/item-details-dialog.html">
+<link rel="import" href="question-item-content.html">
+
+<dom-module id="question-details-dialog">
+    <template>
+        <item-details-dialog
+            id              = "dialog"
+            can-call        = "[[canCall]]"
+            can-send-sms    = "[[canSendSms]]"
+            can-delete      = "[[canDelete]]"
+            index           = "{{index}}"
+            item            = "[[item]]"
+            channels        = "[[channels]]"
+            lines           = "[[lines]]">
+            <div slot="content">
+                    <p>
+                        <b>Closed at:</b> [[item.closed_at]]
+                        <br />
+                        <b>Title:</b> [[item.title]]
+                    </p>
+                    <question-item-content
+                        item    = "[[item]]"></question-item-content>
+            </div>
+        </item-details-dialog>
+    </template>
+    <script>
+        Polymer({
+
+            is: 'question-details-dialog',
+
+            properties: {
+                canCall: {
+                    type: Boolean,
+                    value: false
+                },
+                canSendSms: {
+                    type: Boolean,
+                    value: false
+                },
+                canDelete: {
+                    type: Boolean,
+                    value: false
+                },
+                index: {
+                    type: Number,
+                    value: 0,
+                },
+                item: {
+                    type: Object,
+                    value: {}
+                }
+            },
+
+            open: function () {
+                this.$.dialog.open();
+            },
+
+            close: function () {
+                this.$.dialog.close();
+            },
+
+            _formatDate: function (stamp) {
+                return moment(Number(stamp)).format("ddd, MMM Do YYYY, h:mm:ss a");
+            },
+
+        });
+    </script>
+</dom-module>

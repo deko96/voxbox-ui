@@ -52,13 +52,6 @@
             //                  : list.selectItem(e.model.index);
         },
 
-        onShowDetails: function (e) {
-            var details = this.$.details;
-            Polymer.dom(document.querySelector('body')).appendChild(details);
-            this._updateDialog(details, e.model.item, e.model.index);
-            details.open();
-        },
-
         onDeleteSelection: function () {
             var dialog = this.$['confirm-delete-dialog'];
             Polymer.dom(document.querySelector('body')).appendChild(dialog);
@@ -126,9 +119,7 @@
 
         _updateDialog: function (dialog, item, index) {
             dialog.index = index;
-            dialog.content = item.content;
-            dialog.timestamp = item.timestamp;
-            dialog.sender = item.endpoint;
+            dialog.item = item;
         },
 
         _computedSelectionSize: function () {

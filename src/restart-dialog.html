@@ -5,14 +5,15 @@
 <dom-module id="restart-dialog">
   <template>
     <style>
-
       paper-dialog {
         min-height: 130px;
       }
+
       .buttons {
         display: flex;
         justify-content: center;
       }
+
       paper-button[dialog-confirm] {
         color: rgb(0, 188, 212);
       }
@@ -20,12 +21,8 @@
       paper-button[dialog-dismiss] {
         color: red;
       }
-
     </style>
-    <paper-dialog 
-      modal
-      id                     = "dialog"
-      opened                 = "{{opened}}">
+    <paper-dialog modal id="dialog" opened="{{opened}}">
       <div>
         <h3>Are you sure that you want to restart this box?</h3>
         <div class="buttons">
@@ -60,7 +57,6 @@
     </paper-dialog>
   </template>
   <script>
-
     Polymer({
 
       is: 'restart-dialog',
@@ -72,15 +68,15 @@
         },
       },
 
-      open: function() {
+      open: function () {
         this.$.dialog.open();
       },
 
-      close: function() {
+      close: function () {
         this.$.dialog.close();
       },
 
-      restartBox: function() {
+      restartBox: function () {
         this.fire('xml-http-request', {
           action: 'systemRestart',
           reason: 'User initiated',
@@ -103,6 +99,5 @@
       */
 
     });
-
   </script>
 </dom-module>

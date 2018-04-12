@@ -1,70 +1,34 @@
-<link rel="import" href="../../bower_components/paper-audio-player/paper-audio-player.html">
 <link rel="import" href="../../bower_components/paper-tags-input/paper-tags-input.html">
-<link rel="import" href="../../bower_components/paper-item/paper-item.html">
-<link rel="import" href="../../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../core/item-behavior.html">
 <link rel="import" href="../core/list-item.html">
+<link rel="import" href="question-item-content.html">
 
 <dom-module id="question-item">
     <template>
         <style>
-            paper-item {
-                padding: 0;
-                margin-bottom: 5px;
-            }
-            paper-item paper-button {
-                min-width: 0 !important;
-                width: 32px !important;
-            }
-            a, a:visited, a:active {
-                color: #000;
+            list-item {
+                --list-item-grid-width: 350px;
+                --list-item-grid-height: 290px;
             }
         </style>
 
-        <list-item
-            select-mode         = "[[selectMode]]"
-            selected            = "[[selected]]"
-            grid                = "[[grid]]"
-            item                = "[[item]]"
-            favoritable         = "[[favoritable]]"
-            details             = "[[details]]">
-                <div slot="date">[[_parseDate(item.created_at)]]</div>
-                <div slot="title">[[item.subscriber_phone]]</div>
-                <div slot="content">
-                    <template is="dom-repeat" items="[[item.articles]]" as="article" index-as="articleIndex">
-                        <template is="dom-if" if="[[_showArticle(articleIndex, grid)]]">
-                            <template is="dom-repeat" items="[[article.attachments]]" as="attachment">
-                                <paper-item>
-                                    <paper-item-body>
-                                        <paper-audio-player
-                                        src="[[_getAudioURL(item.zammad_id, article.id, attachment.filename)]]"
-                                        title="[[attachment.filename]]"
-                                        color$="[[_getAudioColor(articleIndex)]]"
-                                        preload="none">
-                                        </paper-audio-player>
-                                    </paper-item-body>
-                                    <a href="[[_downloadAudio(item.zammad_id, article.id, attachment.filename)]]" target="_blank">
-                                        <paper-button>
-                                            <iron-icon icon="icons:file-download"></iron-icon>
-                                        </paper-button>
-                                    </a>
-                                </paper-item>
-                            </template>
-                        </template>
-                    </template>
-                </div>
-                <div slot="bottom-left">
-                    <template is="dom-if" if="[[_hasTags(item)]]">
-                        <paper-tags-input
-                            tags="[[item.tags]]"
-                            enable-add="[[tagsConfig.enableAdd]]"
-                            enable-remove="[[tagsConfig.enableRemove]]"
-                            size="[[tagsConfig.size]]">
-                        </paper-tags-input>
-                    </template>
-                </div>
+        <list-item select-mode="[[selectMode]]" selected="[[selected]]" grid="[[grid]]" item="[[item]]" favoritable="[[favoritable]]"
+            details="[[details]]">
+            <div slot="date">[[_parseDate(item.closed_at)]]</div>
+            <div slot="title">[[item.title]]</div>
+            <div slot="content">
+                <question-item-content
+                    item    = "[[item]]"
+                    grid    = "[[grid]]"></question-item-content>
+            </div>
+            <div slot="bottom-left">
+                <template is="dom-if" if="[[_hasTags(item)]]">
+                    <paper-tags-input tags="[[item.tags]]" enable-add="[[tagsConfig.enableAdd]]" enable-remove="[[tagsConfig.enableRemove]]"
+                        size="[[tagsConfig.size]]">
+                    </paper-tags-input>
+                </template>
+            </div>
         </list-item>
     </template>
     <script>
@@ -82,7 +46,7 @@
                 },
                 details: {
                     type: Boolean,
-                    value: false
+                    value: true
                 }
             },
 
@@ -90,29 +54,11 @@
                 ItemBehavior
             ],
 
-            _parseDate: function(timeString) {
+            _parseDate: function (timeString) {
                 return this._formatDate(Date.parse(timeString));
             },
 
-            _showArticle: function(articleIndex, grid) {
-                return (grid && articleIndex < 2) || (!grid);
-            },
-
-            _getAudioURL: function(ticketId, articleId, attachmentName) {
-                let url = new URL(window.location);
-                let protocol = url.protocol + '//';
-                return protocol + [url.host, 'answers', ticketId, articleId, attachmentName].join('/');
-            },
-
-            _downloadAudio: function(ticketId, articleId, attachmentName) {
-                return this._getAudioURL(ticketId, articleId, attachmentName) + '?download';
-            },
-
-            _getAudioColor: function(articleIndex) {
-                return articleIndex === 0 ? 'deepskyblue' : 'green';
-            },
-
-            _hasTags: function(ticket) {
+            _hasTags: function (ticket) {
                 return ticket.tags && ticket.tags.length;
             }
 

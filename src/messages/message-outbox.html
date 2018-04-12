@@ -157,6 +157,13 @@
         return this.$.list;
       },
 
+      onShowDetails: function (e) {
+          var details = this.$.details;
+          Polymer.dom(document.querySelector('body')).appendChild(details);
+          this._updateDialog(details, e.model.item, e.model.index);
+          details.open();
+      }
+
     });
 
   </script>

@@ -29,7 +29,7 @@
                         </paper-icon-button>
                     </template>
                     <template is="dom-if" if="[[details]]">
-                        <paper-icon-button 
+                        <paper-icon-button
                             on-tap  = "_showMessage"
                             icon    = "unfold-more">
                         </paper-icon-button>
@@ -46,20 +46,21 @@
                 <template is="dom-if" if="[[grid]]">
                     <div class="controls">
                         <template is="dom-if" if="[[favoritable]]">
-                            <paper-icon-button 
+                            <paper-icon-button
                                 class  = "star"
                                 on-tap = "_toggleFavorite"
                                 icon   = "[[_favoriteButtonIcon(item.favorite)]]">
                             </paper-icon-button>
                         </template>
                         <template is="dom-if" if="[[details]]">
-                            <paper-icon-button 
+                            <paper-icon-button
+                                id     = "test"
                                 on-tap = "_showMessage"
                                 icon   = "unfold-more">
                             </paper-icon-button>
                         </template>
                     </div>
-                </template>                
+                </template>
             </div>
         </div>
     </template>

@@ -1,0 +1,86 @@
+<link rel="import" href="../../bower_components/paper-audio-player/paper-audio-player.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="question-item-content">
+    <template>
+        <style>
+            paper-audio-player {
+                --paper-audio-player-height: 40px;
+            }
+            paper-item {
+                padding: 0;
+                margin-bottom: 4px;
+                --paper-item-min-height: 40px;
+            }
+
+            paper-item paper-button {
+                min-width: 0 !important;
+                width: 32px !important;
+                max-height: 40px;
+            }
+
+            a,
+            a:visited,
+            a:active {
+                color: #000;
+            }
+        </style>
+        <template is="dom-repeat" items="[[item.articles]]" as="article" index-as="articleIndex">
+            <template is="dom-if" if="[[_showArticle(articleIndex, grid)]]">
+                <template is="dom-repeat" items="[[article.attachments]]" as="attachment">
+                    <paper-item>
+                        <paper-item-body>
+                            <paper-audio-player src="[[_getAudioURL(item.zammad_id, article.id, attachment.filename)]]" title="[[_getAudioTitle(article, articleIndex)]]"
+                                color$="[[_getAudioColor(articleIndex)]]">
+                            </paper-audio-player>
+                        </paper-item-body>
+                        <a href="[[_downloadAudio(item.zammad_id, article.id, attachment.filename)]]" target="_blank">
+                            <paper-button>
+                                <iron-icon icon="icons:file-download"></iron-icon>
+                            </paper-button>
+                        </a>
+                    </paper-item>
+                </template>
+            </template>
+        </template>
+    </template>
+    <script>
+        Polymer({
+            is: 'question-item-content',
+            properties: {
+                item: {
+                    type: Object,
+                    value: {}
+                }
+            },
+            _showArticle: function (articleIndex, grid) {
+                return (grid && articleIndex < 2) || (!grid);
+            },
+
+            _getAudioURL: function (ticketId, articleId, attachmentName) {
+                let url = new URL(window.location);
+                let protocol = url.protocol + '//';
+                return protocol + [url.host, 'answers', ticketId, articleId, attachmentName].join('/');
+            },
+
+            _getAudioTitle: function(article, articleIndex) {
+                if (articleIndex === 0) {
+                    return ['Q:', article.subject].join(' ');
+                } else {
+                    return ['A:', article.from].join(' ');
+                }
+            },
+
+            _downloadAudio: function (ticketId, articleId, attachmentName) {
+                return this._getAudioURL(ticketId, articleId, attachmentName) + '?download';
+            },
+
+            _getAudioColor: function (articleIndex) {
+                return articleIndex === 0 ? 'deepskyblue' : 'green';
+            },
+        });
+    </script>
+</dom-module>

@@ -38,11 +38,11 @@
       }
 
       paper-tabs {
-        background-color: rgb(0, 188, 212); 
+        background-color: rgb(0, 188, 212);
         color: #fff;
         width: 100vw;
         height: 68px;
-        --paper-tabs-selection-bar-color: var(--paper-pink-a200); 
+        --paper-tabs-selection-bar-color: var(--paper-pink-a200);
       }
 
       paper-tab {
@@ -60,7 +60,8 @@
         overflow-x: hidden;
       }
 
-      iron-icon, label {
+      iron-icon,
+      label {
         padding: 2px;
         margin-top: -2px;
       }
@@ -75,73 +76,54 @@
       }
 
       .spinner-container {
-        width: 100vw; 
-        height: 100vh; 
-        display: flex; 
+        width: 100vw;
+        height: 100vh;
+        display: flex;
         position: absolute;
         overflow: hidden;
-        justify-content: center; 
+        justify-content: center;
         align-items: center;
       }
 
       p.nope {
-        text-align: center; 
+        text-align: center;
         margin: 30px 0;
       }
 
       span.version {
-        font-size: 11px; 
-        margin-top: 24px; 
-        font-weight: bold; 
+        font-size: 11px;
+        margin-top: 24px;
+        font-weight: bold;
         opacity: 0.5;
         position: absolute;
       }
-
     </style>
-    <iron-ajax
-      id                    = "ajax"
-      on-response           = "_handleAjaxResponse">
+    <iron-ajax id="ajax" on-response="_handleAjaxResponse">
     </iron-ajax>
-    <message-handler
-      id = "message-handler"
-      connected = "{{boxConnected}}"
-      on-message  = "handleMessage"
-      debug       = "[[debug]]"
-      ></message-handler>
-    <error-dialog
-      id                    = "error-dialog">
+    <message-handler id="message-handler" connected="{{boxConnected}}" on-message="handleMessage" debug="[[debug]]"></message-handler>
+    <error-dialog id="error-dialog">
     </error-dialog>
-    <restart-dialog
-      on-xml-http-request   = "_sendXMLHttpRequest"
-      channels              = "[[activeChannels]]"
-      id                    = "restart-dialog">
+    <restart-dialog on-xml-http-request="_sendXMLHttpRequest" channels="[[activeChannels]]" id="restart-dialog">
     </restart-dialog>
-    <iron-iconset-svg 
-      name                  = "custom" 
-      size                  = "24">
+    <iron-iconset-svg name="custom" size="24">
       <svg>
         <defs>
           <g id="outbox">
-            <path 
-              fill          = "#ffffff" 
-              d             = "M14,14H10V11H8L12,7L16,11H14V14M16,11M5,15V5H19V15H15A3,3 0 0,1 12,18A3,3 0 0,1 9,15H5M19,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3" />
+            <path fill="#ffffff" d="M14,14H10V11H8L12,7L16,11H14V14M16,11M5,15V5H19V15H15A3,3 0 0,1 12,18A3,3 0 0,1 9,15H5M19,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3"
+            />
           </g>
         </defs>
       </svg>
     </iron-iconset-svg>
-    <error-dialog
-      opened                = "[[!online]]"
-      title                 = "Network unavailable"
-      message               = "Please check your network connection.">
+    <error-dialog opened="[[!online]]" title="Network unavailable" message="Please check your network connection.">
     </error-dialog>
-    <error-dialog
-      opened                = "[[_boxUnavailable(hasInitialized, online, boxConnected)]]"
-      title                 = "The Voxbox is not responding">
+    <error-dialog opened="[[_boxUnavailable(hasInitialized, online, boxConnected)]]" title="The Voxbox is not responding">
       <p class="nope">
-        <img src="[[_nope(boxConnected)]]" style="max-height: 240px;" /> 
+        <img src="[[_nope(boxConnected)]]" style="max-height: 240px;" />
       </p>
       <p style="margin-bottom: 30px;">
-        Please follow the troubleshooting steps in your user manual. If the problem persists, contact the technical support at Farm Radio for assistance.
+        Please follow the troubleshooting steps in your user manual. If the problem persists, contact the technical support at Farm
+        Radio for assistance.
       </p>
     </error-dialog>
     <div class="spinner-container">
@@ -156,9 +138,7 @@
               <img src="/images/voxbox.png" style="margin-top: 6px;" />
               <span class="version">[[version]] client-0.3.5.5</span>
             </div>
-            <paper-icon-button 
-              icon            = "notification:power" 
-              on-tap          = "_showRestartDialog">
+            <paper-icon-button icon="notification:power" on-tap="_showRestartDialog">
             </paper-icon-button>
           </app-toolbar>
           <paper-tabs selected="{{tab}}">
@@ -173,28 +153,24 @@
                 <iron-icon icon="communication:message"></iron-icon>
                 <label>SMS Inbox
                   <template is="dom-if" if="[[unread]]">
-                    <paper-badge 
-                      for       = "number"
-                      label     = "[[unread]]">
+                    <paper-badge for="number" label="[[unread]]">
                     </paper-badge>
                   </template>
                 </label>
               </div>
             </paper-tab>
-            <paper-tab>
+            <!-- <paper-tab>
               <div class="layout vertical center">
                 <iron-icon icon="custom:outbox"></iron-icon>
                 <label>Sent SMS</label>
               </div>
-            </paper-tab>
+            </paper-tab> -->
             <paper-tab>
               <div class="layout vertical center">
                 <iron-icon icon="communication:forum"></iron-icon>
                 <label>Q+A
                   <template is="dom-if" if="[[unread]]">
-                    <paper-badge 
-                      for       = "number"
-                      label     = "[[unread]]">
+                    <paper-badge for="number" label="[[unread]]">
                     </paper-badge>
                   </template>
                 </label>
@@ -202,46 +178,23 @@
             </paper-tab>
           </paper-tabs>
         </app-header>
-        <iron-pages 
-          selected            = "[[tab]]">
-          <channel-list
-            id                = "calls"
-            diff              = "[[diff]]"
-            on-message        = "sendMessage"
-            on-update-contact = "handleUpdateContact"
-            channels          = "[[channels]]"
-            lines             = "[[lines]]">
+        <iron-pages selected="[[tab]]">
+          <channel-list id="calls" diff="[[diff]]" on-message="sendMessage" on-update-contact="handleUpdateContact" channels="[[channels]]"
+            lines="[[lines]]">
           </channel-list>
-          <message-inbox 
-            id                = "messageInbox"
-            on-message        = "sendMessage"
-            unread            = "{{unread}}"
-            items             = "[[inbox]]"
-            channels          = "[[activeChannels]]"
-            lines             = "[[activeLines]]"
-            debug             = "[[debug]]">
+          <message-inbox id="messageInbox" on-message="sendMessage" unread="{{unread}}" items="[[inbox]]" channels="[[activeChannels]]"
+            lines="[[activeLines]]" debug="[[debug]]">
           </message-inbox>
-          <message-outbox
-            id                = "outbox"
-            on-message        = "sendMessage"
-            items             = "[[outbox]]"
-            channels          = "[[activeChannels]]"
-            lines             = "[[activeLines]]"
-            debug             = "[[debug]]">
-          </message-outbox>
-          <questions-list
-            id                = "questions"
-            on-message        = "sendMessage"
-            items             = "[[questions]]"
-            lines             = "[[activeLines]]"
-            debug             = "[[debug]]">
+          <!-- <message-outbox id="outbox" on-message="sendMessage" items="[[outbox]]" channels="[[activeChannels]]" lines="[[activeLines]]"
+            debug="[[debug]]">
+          </message-outbox> -->
+          <questions-list id="questions" on-message="sendMessage" items="[[questions]]" lines="[[activeLines]]" debug="[[debug]]">
           </questions-list>
         </iron-pages>
       </app-header-layout>
     </template>
   </template>
   <script>
-
     Polymer({
 
       is: 'client-app',
@@ -311,13 +264,13 @@
       },
 
       behaviors: [
-        Polymer.AppNetworkStatusBehavior, 
+        Polymer.AppNetworkStatusBehavior,
       ],
 
-      ready: function() {
-        window.setTimeout(function() {
+      ready: function () {
+        window.setTimeout(function () {
           if (!this.hasInitialized) {
-            this.hasInitialized = true;          // Connection timeout
+            this.hasInitialized = true; // Connection timeout
           }
         }.bind(this), 10000);
 
@@ -327,11 +280,11 @@
         }
       },
 
-      send: function(event, data) {
+      send: function (event, data) {
         this.$['message-handler'].send(event, data);
       },
 
-      handleUpdateContact: function(e) {
+      handleUpdateContact: function (e) {
         var change = e.detail;
         if (change) {
           var indices = this._getIndices();
@@ -341,7 +294,7 @@
         }
       },
 
-      handleMessage: function(event, payload) {
+      handleMessage: function (event, payload) {
         if (this.debug && 'pong' != payload.event) {
           console.log('<<<<<<<<<<<<<<< (recv)');
           console.log(payload);
@@ -349,9 +302,10 @@
         switch (payload.event) {
           case 'inboxMessages':
             let messages = payload.data.messages;
-            let inbox = [], outbox = [];
+            let inbox = [],
+              outbox = [];
 
-            for (let i =0; i < messages.length; i++) {
+            for (let i = 0; i < messages.length; i++) {
               let message = messages[i];
               let type = message.type;
               type === 'sms_in' ? inbox.push(message) : outbox.push(message);
@@ -362,8 +316,8 @@
             break;
           case 'messageSent':
             var toast = document.createElement('paper-toast');
-            toast.text = 'Message successfully sent.';             
-            document.body.appendChild(toast); 
+            toast.text = 'Message successfully sent.';
+            document.body.appendChild(toast);
             toast.show();
             break;
           case 'inboxUpdate':
@@ -371,7 +325,7 @@
             let count = 0;
             let only = null;
 
-            Object.keys(data).forEach(function(key, i) {
+            Object.keys(data).forEach(function (key, i) {
               let message = data[key];
               let messageType = message.type === 'sms_in' ? 'inbox' : 'outbox';
               let messageIndex = this._findMessageIndex(message);
@@ -391,27 +345,43 @@
             if (count) {
               let toast = document.createElement('paper-toast');
               if (count === 1) {
-                toast.text = ['New message from', only.endpoint, ].join(' ') + ': ' + this._truncated(only.content, 60);
+                toast.text = ['New message from', only.endpoint, ].join(' ') + ': ' + this._truncated(only.content,
+                  60);
               } else {
                 toast.text = [count, ' new messages!'].join(' ');
               }
-              document.body.appendChild(toast); 
+              document.body.appendChild(toast);
               toast.show();
             }
             break;
           case 'questionsUpdate':
-            this.set('questions', payload.data);
+            Object.keys(payload.data).forEach((key, i) => {
+              let question = payload.data[key];
+              let questionIndex = this._findQuestionIndex(question);
+
+              if (questionIndex > -1) {
+                let tmpQuestions = [...this.get('questions')];
+                tmpQuestions[questionIndex] = question;
+                this.setProperties({
+                  questions: tmpQuestions
+                });
+              } else {
+                this.push('questions', question);
+              }
+            });
             break;
           case 'initialize':
             if (this.debug) {
-              console.log("              .,,,''''''',,\n         .,,,/           ,~~~\\.     /~~~\\     \\   \\\n/     __/               /      \\_'''',,,/     ))  ))\n\\_O--/                  |       \\    __ \",,  //  //\n    |                    /  \\_  /     @)  ''//_ //\n   |                      ',,,/      ~~    //  ~~__\n   |          )             (           __//        ---___ _/OO\n    \\          )     /    )   ( ,,,,   (_Q   '''----_______,_/\n      \\       |--.-- #|   |,,,/\\_   ~~\\/\n        \\____________#| /    \\_ ''\\___\n         /  /    _/  /         ~~\\ __ \\\n        /__/   #|__/                 |##\n        |##    ~~");
+              console.log(
+                "              .,,,''''''',,\n         .,,,/           ,~~~\\.     /~~~\\     \\   \\\n/     __/               /      \\_'''',,,/     ))  ))\n\\_O--/                  |       \\    __ \",,  //  //\n    |                    /  \\_  /     @)  ''//_ //\n   |                      ',,,/      ~~    //  ~~__\n   |          )             (           __//        ---___ _/OO\n    \\          )     /    )   ( ,,,,   (_Q   '''----_______,_/\n      \\       |--.-- #|   |,,,/\\_   ~~\\/\n        \\____________#| /    \\_ ''\\___\n         /  /    _/  /         ~~\\ __ \\\n        /__/   #|__/                 |##\n        |##    ~~"
+              );
             }
             this.send('inboxFetch', {
-              filter: [], 
+              filter: [],
               after_id: null,
               count: 1000,
             });
-            
+
             this.send('questionsFetch', {
               filter: [],
               after_id: null,
@@ -420,7 +390,7 @@
 
             this.set('channels', []);
             var channels = payload.data.mixer.channels;
-            Object.keys(channels).forEach(function(key) {
+            Object.keys(channels).forEach(function (key) {
               var channel = channels[key];
               if (channel) {
                 channel.id = key;
@@ -429,11 +399,11 @@
             }, this);
 
             /**
-            * Set the Lines up
-            */
+             * Set the Lines up
+             */
             this.set('lines', []);
             let lines = payload.data.lines;
-            Object.keys(lines).forEach(function(key) {
+            Object.keys(lines).forEach(function (key) {
               var line = lines[key];
               if (line) {
                 line.id = key;
@@ -441,13 +411,13 @@
               }
             }, this);
 
-            this.diff = Date.now()-payload.data.server_time;
+            this.diff = Date.now() - payload.data.server_time;
             this.version = payload.data.server_version || 'unknown version';
             if (this.debug) {
               console.log('Server time : ' + payload.data.server_time);
               console.log('Diff        : ' + this.diff);
             }
-            window.setTimeout(function() {
+            window.setTimeout(function () {
               this.hasInitialized = true;
             }.bind(this), 1000);
             break;
@@ -460,15 +430,16 @@
             break;
           case 'channelUpdate':
             var indices = this._getIndices();
-            Object.keys(payload.data).forEach(function(key) {
+            Object.keys(payload.data).forEach(function (key) {
               let channel = payload.data[key];
               if (channel) channel.id = key;
               if (indices.hasOwnProperty(key)) {
                 var index = indices[key];
                 if (channel) {
-                  if ('ring' != this.channels[index].mode && 'ring' == channel.mode && 'incoming' == channel.direction && channel.contact) {
+                  if ('ring' != this.channels[index].mode && 'ring' == channel.mode && 'incoming' == channel.direction &&
+                    channel.contact) {
                     this._showDesktopNotification('Incoming call from ' + channel.contact.number);
-                  } 
+                  }
                   this.set('channels.' + index, channel);
                 } else {
                   this.splice('channels', index, 1);
@@ -480,7 +451,7 @@
             break;
           case 'channelVolumeChange':
             var indices = this._getIndices();
-            Object.keys(payload.data).forEach(function(key) {
+            Object.keys(payload.data).forEach(function (key) {
               if (indices.hasOwnProperty(key)) {
                 this.set('channels.' + indices[key] + '.level', payload.data[key]);
               }
@@ -488,10 +459,10 @@
             break;
           case 'channelContactInfo':
             var indices = this._getIndices();
-            Object.keys(payload.data).forEach(function(key) {
+            Object.keys(payload.data).forEach(function (key) {
               if (indices.hasOwnProperty(key)) {
                 var change = payload.data[key];
-                Object.keys(change).forEach(function(prop) {
+                Object.keys(change).forEach(function (prop) {
                   this.set('channels.' + indices[key] + '.contact.' + prop, change[prop]);
                 }, this);
               }
@@ -504,23 +475,23 @@
         }
       },
 
-      sendMessage: function(e) {
+      sendMessage: function (e) {
         this.$['message-handler'].send(e.detail.event, e.detail.data);
       },
 
-      _activeChannels: function(channels) {
-        return channels.filter(function(channel) {
+      _activeChannels: function (channels) {
+        return channels.filter(function (channel) {
           return 'free' === channel.mode;
         });
       },
 
-      _activeLines: function(lines) {
-        return lines.filter(function(line) {
+      _activeLines: function (lines) {
+        return lines.filter(function (line) {
           return 'free' === line.status;
         });
       },
 
-      _getIndices: function() {
+      _getIndices: function () {
         var indices = {};
         for (var i = 0; i < this.channels.length; i++) {
           indices[this.channels[i].id] = i;
@@ -528,15 +499,15 @@
         return indices;
       },
 
-      _tabChanged: function(tab) {
+      _tabChanged: function (tab) {
         // to do smth on tab change..
       },
 
-      _spinnerVisible: function(hasInitialized) {
+      _spinnerVisible: function (hasInitialized) {
         return !hasInitialized;
       },
 
-      _uiHidden: function(hasInitialized, online, boxConnected) {
+      _uiHidden: function (hasInitialized, online, boxConnected) {
         var hidden = !online || !hasInitialized;
         if (!hidden) {
           // this.$['inbox'].updateGeometry();
@@ -544,29 +515,30 @@
         return hidden;
       },
 
-      _boxUnavailable: function(hasInitialized, online, boxConnected) {
+      _boxUnavailable: function (hasInitialized, online, boxConnected) {
         return online && hasInitialized && !boxConnected;
       },
 
-      _nope: function() {
-        return '/images/giphy/nope' + ((Math.random()*7|0)+1) + '.gif';
+      _nope: function () {
+        return '/images/giphy/nope' + ((Math.random() * 7 | 0) + 1) + '.gif';
       },
 
-      _truncated: function(str, lim) {
+      _truncated: function (str, lim) {
         return (str && str.length > lim) ? str.substring(0, lim) + '…' : str;
       },
 
-      _getURLParameter: function(name) {
-        return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
+      _getURLParameter: function (name) {
+        return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) ||
+          [null, ''])[1].replace(/\+/g, '%20')) || null;
       },
 
-      _showDesktopNotification: function(message) {
+      _showDesktopNotification: function (message) {
         if (!('Notification' in window)) {
           return;
         } else if (Notification.permission === 'granted') {
           new Notification(message);
         } else if (Notification.permission !== 'denied') {
-          Notification.requestPermission(function(permission) {
+          Notification.requestPermission(function (permission) {
             if (permission === 'granted') {
               new Notification(message);
             }
@@ -574,13 +546,13 @@
         }
       },
 
-      _showRestartDialog: function() {
+      _showRestartDialog: function () {
         var dialog = this.$['restart-dialog'];
         Polymer.dom(document.querySelector('body')).appendChild(dialog);
         dialog.open();
       },
 
-      _sendXMLHttpRequest: function(e, params) {
+      _sendXMLHttpRequest: function (e, params) {
         var a = document.createElement('a');
         a.href = this.$['message-handler'].socket.url;
         // var ajax = document.querySelector('iron-ajax');
@@ -600,21 +572,31 @@
         }
       },
 
-      _handleAjaxResponse: function(r) {
+      _handleAjaxResponse: function (r) {
         console.log(r);
       },
 
-      _findMessageIndex(message) {
+      _findMessageIndex: function(message) {
         let type = message.type === 'sms_in' ? 'inbox' : 'outbox';
         let mailBox = this.get(type);
-        for(let i = mailBox.length - 1; i >= 0; --i) {
+        for (let i = mailBox.length - 1; i >= 0; --i) {
           if (message.timestamp >= mailBox[i].timestamp && message.id !== mailBox[i].id) return -1;
           if (message.id === mailBox[i].id) return i;
+        }
+        return -1;
+      },
+
+      _findQuestionIndex: function(question) {
+        let questionTimestamp = new Date(Date.parse(question.closed_at)).getTime();
+        let questions = this.get('questions');
+        for (let i = questions.length - 1; i >= 0; --i) {
+          let timestamp = new Date(Date.parse(questions[i].closed_at)).getTime();
+          if (questionTimestamp >= timestamp && question.zammad_id !== question.zammad_id) return -1;
+          if (question.zammad_id === questions[i].zammad_id) return i;
         }
         return -1;
       }
 
     });
-
   </script>
 </dom-module>

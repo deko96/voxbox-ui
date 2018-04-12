@@ -12,7 +12,6 @@
   <template>
     <style include="iron-flex iron-flex-alignment"></style>
     <style>
-
       paper-dialog {
         width: 450px;
       }
@@ -52,68 +51,55 @@
       }
 
       .close-button {
-        position: absolute; 
-        right: 10px; 
+        position: absolute;
+        right: 10px;
         top: 10px;
       }
-
     </style>
-    <call-dialog
-      id                  = "call-dialog"
-      on-confirmed        = "_handleCall"
-      lines               = "[[lines]]">
-    </call-dialog>
-    <message-compose-dialog
-      id                  = "message-compose-dialog"
-      on-confirmed        = "onMessageComposeConfirmed"
-      channels            = "[[channels]]">
-    </message-compose-dialog>
-    <confirm-delete-dialog 
-      id                  = "confirm-delete-dialog" 
-      on-delete-confirmed = "onDeleteConfirmed"
-      selection-size      = "1">
-    </confirm-delete-dialog>
-    <paper-dialog 
-      on-keydown          = "_handleKeyEvent"
-      id                  = "dialog"
-      with-backdrop>
+    <template is="dom-if" if="[[canCall]]">
+      <call-dialog id="call-dialog" on-confirmed="_handleCall" lines="[[lines]]">
+      </call-dialog>
+    </template>
+    <template is="dom-if" if="[[canSendSms]]">
+      <message-compose-dialog id="message-compose-dialog" on-confirmed="onMessageComposeConfirmed" channels="[[channels]]">
+      </message-compose-dialog>
+    </template>
+    <template is="dom-if" if="[[canDelete]]">
+      <confirm-delete-dialog id="confirm-delete-dialog" on-delete-confirmed="onDeleteConfirmed" selection-size="1">
+      </confirm-delete-dialog>
+    </template>
+    <paper-dialog on-keydown="_handleKeyEvent" id="dialog" with-backdrop>
       <div>
         <div class="close-button">
-          <paper-icon-button
-            on-tap        = "close"
-            icon          = "icons:close">
+          <paper-icon-button on-tap="close" icon="icons:close">
           </paper-icon-button>
         </div>
       </div>
       <div>
         <div class="message-container">
           <div class="nav">
-            <paper-icon-button
-              on-tap      = "_showPrevious"
-              icon        = "icons:chevron-left">
+            <paper-icon-button on-tap="_showPrevious" icon="icons:chevron-left">
             </paper-icon-button>
           </div>
           <div class="message-content">
-            <p>
-              <b>From:</b> [[sender]]<br />
-              <b>Sent:</b> [[_formatDate(timestamp)]]
-            </p>
-            <p>
-              [[content]]
-            </p>
+            <slot name="content"></slot>
           </div>
           <div class="nav">
-            <paper-icon-button 
-              on-tap      = "_showNext"
-              icon        = "icons:chevron-right">
+            <paper-icon-button on-tap="_showNext" icon="icons:chevron-right">
             </paper-icon-button>
           </div>
         </div>
       </div>
       <div class="buttons">
-        <paper-button on-tap="_confirmDeleteMessage">Delete</paper-button>
-        <paper-button on-tap="_replyMessage">Reply</paper-button>
-        <paper-button on-tap="_openCallDialog">Call number</paper-button>
+        <template is="dom-if" if="[[canDelete]]">
+          <paper-button on-tap="_confirmDeleteMessage">Delete</paper-button>
+        </template>
+        <template is="dom-if" if="[[canSendSms]]">
+          <paper-button on-tap="_replyMessage">Reply</paper-button>
+        </template>
+        <template is="dom-if" if="[[canCall]]">
+          <paper-button on-tap="_openCallDialog">Call number</paper-button>
+        </template>
       </div>
     </paper-dialog>
   </template>
@@ -123,38 +109,42 @@
       is: 'item-details-dialog',
 
       properties: {
+        canCall: {
+          type: Boolean,
+          value: false
+        },
+        canSendSms: {
+          type: Boolean,
+          value: false
+        },
+        canDelete: {
+          type: Boolean,
+          value: false
+        },
         index: {
-          type: Number,
-          value: 0,
+            type: Number,
+            value: 0,
         },
-        content: {
-          type: String,
-          value: '',
-        },
-        sender: {
-          type: String,
-          value: '',
-        },
-        timestamp: {
-          type: String,
-          value: '',
-        },
+        item: {
+          type: Object,
+          value: {}
+        }
       },
 
-      open: function() {
+      open: function () {
         this.$.dialog.open();
       },
 
-      close: function() {
+      close: function () {
         this.$.dialog.close();
       },
 
-      onDeleteConfirmed: function() {
+      onDeleteConfirmed: function () {
         this.fire('delete-item', this.index);
       },
-      
-      onMessageComposeConfirmed: function() {
-        var dialog = this.$['message-compose-dialog'];
+
+      onMessageComposeConfirmed: function () {
+        var dialog = document.querySelector('message-compose-dialog') || this.$$('#message-compose-dialog');
         this.fire('sms-out', {
           endpoint: dialog.number,
           content: dialog.message,
@@ -163,7 +153,7 @@
         this.close();
       },
 
-      _handleKeyEvent: function(e) {
+      _handleKeyEvent: function (e) {
         if (e.keyCode === 37) {
           this._showPrevious();
         } else if (e.keyCode === 39) {
@@ -171,54 +161,51 @@
         }
       },
 
-      _showNext: function() {
+      _showNext: function () {
         this.fire('next');
       },
 
-      _showPrevious: function() {
+      _showPrevious: function () {
         this.fire('prev');
       },
 
-      _openCallDialog: function() {
-        var dialog = this.$['call-dialog'];
+      _openCallDialog: function () {
+        let dialog = document.querySelector('call-dialog') || this.$$('#call-dialog');
         Polymer.dom(document.querySelector('body')).appendChild(dialog);
         dialog.open();
-        dialog.number = this.sender;
+        dialog.number = this.item.endpoint;
       },
 
-      _handleCall: function() {
-        var dialog = this.$['call-dialog'];
+      _handleCall: function () {
+        let dialog = document.querySelector('call-dialog') || this.$$('#call-dialog');
         this.fire('message', {
           event: 'callNumber',
           data: {
             number: dialog.number,
+            waitAnswer: dialog.waitAnswer,
             mode: 'master',
-            channel_id: ('__auto__' === dialog.channel ? null : dialog.channel),
+            line_id: ('__auto__' === dialog.line ? null : dialog.line),
           },
         });
         this.close();
         var toast = document.createElement('paper-toast');
-        toast.text = 'Calling ' + dialog.number;             
-        document.body.appendChild(toast); 
+        toast.text = 'Calling ' + dialog.number;
+        document.body.appendChild(toast);
         toast.show();
       },
 
-      _confirmDeleteMessage: function() {
-        var dialog = this.$['confirm-delete-dialog'];
+      _confirmDeleteMessage: function () {
+        let dialog = document.querySelector('confirm-delete-dialog') || this.$$('#confirm-delete-dialog');
         Polymer.dom(document.querySelector('body')).appendChild(dialog);
         dialog.open();
       },
 
-      _replyMessage: function() {
-        var dialog = this.$['message-compose-dialog'];
+      _replyMessage: function () {
+        let dialog = document.querySelector('message-compose-dialog') || this.$$('#message-compose-dialog');
         Polymer.dom(document.querySelector('body')).appendChild(dialog);
         dialog.open();
-        dialog.number = this.sender;
-      },
-
-      _formatDate: function(stamp) {
-        return moment(Number(stamp)).format("ddd, MMM Do YYYY, h:mm:ss a"); 
-      },
+        dialog.number = this.item.endpoint;
+      }
 
     });
   </script>
