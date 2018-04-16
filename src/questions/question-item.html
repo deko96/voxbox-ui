@@ -17,7 +17,7 @@
         <list-item select-mode="[[selectMode]]" selected="[[selected]]" grid="[[grid]]" item="[[item]]" favoritable="[[favoritable]]"
             details="[[details]]">
             <div slot="date">[[_parseDate(item.closed_at)]]</div>
-            <div slot="title">[[item.title]]</div>
+            <div slot="title" title="[[item.title]]">[[item.title]]</div>
             <div slot="content">
                 <question-item-content
                     item    = "[[item]]"
