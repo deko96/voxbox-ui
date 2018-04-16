@@ -4,6 +4,11 @@
 
 <dom-module id="question-details-dialog">
     <template>
+        <style>
+            item-details-dialog {
+                --item-details-dialog-width: 500px;
+            }
+        </style>
         <item-details-dialog
             id              = "dialog"
             can-call        = "[[canCall]]"
@@ -15,7 +20,7 @@
             lines           = "[[lines]]">
             <div slot="content">
                     <p>
-                        <b>Closed at:</b> [[item.closed_at]]
+                        <b>Closed at:</b> [[_formatDate(item.closed_at)]]
                         <br />
                         <b>Title:</b> [[item.title]]
                     </p>
@@ -61,6 +66,7 @@
             },
 
             _formatDate: function (stamp) {
+                stamp = Date.parse(stamp);
                 return moment(Number(stamp)).format("ddd, MMM Do YYYY, h:mm:ss a");
             },
 

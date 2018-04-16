@@ -2,16 +2,48 @@
   "entrypoint": "index.html",
   "shell": "src/client-app.html",
   "fragments": [
+    "src/channels/call-dialog.html",
+    "src/channels/channel-controls.html",
+    "src/channels/channel-item.html",
+    "src/channels/channel-list.html",
+    "src/channels/channel-mode.html",
+    "src/channels/edit-contact-dialog.html",
+    "src/core/confirm-delete-dialog.html",
+    "src/core/item-behavior.html",
+    "src/core/item-details-dialog.html",
+    "src/core/item-styles.html",
+    "src/core/list-behavior.html",
+    "src/core/list-controls.html",
+    "src/core/list-item.html",
+    "src/core/list-styles.html",
+    "src/core/message-handler.html",
+    "src/core/spinner-backdrop.html",
+    "src/messages/message-compose-dialog.html",
+    "src/messages/message-controls.html",
+    "src/messages/message-details-dialog.html",
+    "src/messages/message-inbox.html",
+    "src/messages/message-item.html",
+    "src/messages/message-outbox.html",
+    "src/questions/question-details-dialog.html",
+    "src/questions/question-item-content.html",
+    "src/questions/question-item.html",
+    "src/questions/questions-list.html",
+    "src/error-dialog.html",
+    "src/restart-dialog.html"
   ],
-  "sourceGlobs": [
-   "src/**/*",
-   "images/**/*",
-   "bower.json"
+  "sources": [
+    "src/**/*",
+    "images/**/*",
+    "bower.json"
   ],
-  "includeDependencies": [
+  "extraDependencies": [
     "manifest.json",
-    "bower_components/webcomponentsjs/webcomponents-lite.min.js",
-    "bower_components/robust-websocket/robust-websocket.js",
+    "bower_components/webcomponentsjs/webcomponents-lite.js",
+    "bower_components/font-awesome-animation/dist/font-awesome-animation.min.css",
+    "bower_components/neon-animation/web-animations.html",
     "bower_components/moment/moment.js"
+  ],
+  "builds": [
+    { "preset": "es5-bundled" }
   ]
 }

@@ -33,7 +33,7 @@
                 <template is="dom-repeat" items="[[article.attachments]]" as="attachment">
                     <paper-item>
                         <paper-item-body>
-                            <paper-audio-player src="[[_getAudioURL(item.id, article.id, attachment.filename)]]" title="[[_getAudioTitle(article, articleIndex)]]"
+                            <paper-audio-player src="[[_getAudioURL(item.id, article.id, attachment.filename)]]" title="[[_getAudioTitle(item, article, articleIndex)]]"
                                 color$="[[_getAudioColor(articleIndex)]]">
                             </paper-audio-player>
                         </paper-item-body>
@@ -57,7 +57,7 @@
                 }
             },
             _showArticle: function (articleIndex, grid) {
-                return (grid && articleIndex < 2) || (!grid);
+                return (grid && articleIndex < 3) || (!grid);
             },
 
             _getAudioURL: function (ticketId, articleId, attachmentName) {
@@ -66,9 +66,9 @@
                 return protocol + [url.host, 'answers', ticketId, articleId, attachmentName].join('/');
             },
 
-            _getAudioTitle: function(article, articleIndex) {
+            _getAudioTitle: function(ticket, article, articleIndex) {
                 if (articleIndex === 0) {
-                    return ['Q:', article.subject].join(' ');
+                    return ['Q:', this._parseCustomerPhone(ticket.subscriber_phone)].join(' ');
                 } else {
                     return ['A:', article.from].join(' ');
                 }
@@ -81,6 +81,14 @@
             _getAudioColor: function (articleIndex) {
                 return articleIndex === 0 ? 'deepskyblue' : 'green';
             },
+
+            _parseCustomerPhone: function(customer) {
+                let phone = customer.split('@')[0];
+                if (Number.isInteger(+phone)) {
+                    return phone;
+                }
+                return customer;
+            }
         });
     </script>
 </dom-module>
