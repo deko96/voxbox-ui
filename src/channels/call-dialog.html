@@ -175,7 +175,6 @@
 
       setAgent: function(number) {
         if (this.agents) {
-          console.log('setAgent', number);
           let agent = this.agents.findIndex(agent => agent.phone === number);
           if (agent !== -1) {
             this.selectedAgent = agent;
@@ -224,7 +223,7 @@
 
       handleLineChanged: function () {
         line = this.lines.find(line => line.id === this.line);
-        // this.number = '';
+        this.number = '';
         this.$['number-input'].invalid = false;
       },
 

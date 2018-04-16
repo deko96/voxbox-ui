@@ -258,7 +258,7 @@
 
       openCallDialogForAgents: function(e) {
         var dialog = this.$['call-dialog'];
-        dialog.setAgent('');
+        // dialog.setAgent('');
         dialog.setLine(this.getAgentsLine());
         Polymer.dom(document.querySelector('body')).appendChild(dialog);
         dialog.open();

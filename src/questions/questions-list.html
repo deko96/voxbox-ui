@@ -2,7 +2,9 @@
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
 <link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../core/confirm-delete-dialog.html">
 <link rel="import" href="../core/list-behavior.html">
 <link rel="import" href="../core/list-styles.html">
 <link rel="import" href="question-details-dialog.html">
@@ -11,83 +13,62 @@
 <dom-module id="questions-list">
     <template>
         <style include="list-styles"></style>
+        <style>
+            paper-fab {
+                position: fixed;
+                right: 30px;
+                bottom: 74px;
+                --paper-fab-background: rgb(0, 188, 212); 
+                z-index: 2;
+            }
+        </style>
+
+        <confirm-delete-dialog id="confirm-delete-dialog" on-delete-confirmed="onDeleteConfirmed" selection-size="[[selectionSize]]">
+        </confirm-delete-dialog>
 
         <!-- Question Details Dialog -->
-        <question-details-dialog
-            id                      = "details"
-            channels                = "[[channels]]"
-            on-message              = "_forwardMessage"
-            on-delete-item          = "_handleDeleteConfirmed"
-            on-next                 = "showNextMessage"
-            on-prev                 = "showPreviousMessage"
-            on-sms-out              = "_handleSMSOut">
+        <question-details-dialog id="details" channels="[[channels]]" on-message="_forwardMessage" on-delete-item="onDeleteConfirmed"
+            on-next="showNextMessage" on-prev="showPreviousMessage" on-sms-out="_handleSMSOut">
         </question-details-dialog>
         <!-- / Question Details Dialog -->
 
         <!-- Messages Filter -->
-        <array-filter
-            id                      = "array-filter"
-            items                   = "{{items}}"
-            filtered                = "{{filtered}}"
-            observe                 = "favorite"
-            filter                  = "_filter">
+        <array-filter id="array-filter" items="{{items}}" filtered="{{filtered}}" observe="favorite" filter="_filter">
         </array-filter>
         <!-- / Messages Filter -->
 
         <!-- No Messages Block -->
         <template is="dom-if" if="[[isEmpty]]">
-            <div
-              class                   = "no-items">
-              <paper-material>
-                There are no questions here.
-              </paper-material>
+            <div class="no-items">
+                <paper-material>
+                    There are no questions here.
+                </paper-material>
             </div>
         </template>
         <!-- / No Messages Block -->
 
         <!-- Message Controls Action Bar -->
-        <list-controls
-            id                      = "controls"
-            is-empty                = "[[isEmpty]]"
-            on-iron-resize          = "onResize"
-            on-select-all           = "onSelectAll"
-            on-unselect-all         = "onUnselectAll"
-            on-delete-selection     = "onDeleteSelection"
-            on-star-selection       = "onStarSelection"
-            on-unstar-selection     = "onUnstarSelection"
-            on-unstar-all           = "onUnstarAll"
-            on-toggle-grid          = "onToggleGrid"
-            filter-starred          = "{{filterStarred}}"
-            has-selection           = "[[hasSelection]]"
-            selection-size          = "[[selectionSize]]"
-            grid-selected           = "[[gridSelected]]"
-            grid-mode               = "{{gridMode}}"
-            favorite-options        = "[[favoritable]]">
+        <list-controls id="controls" is-empty="[[isEmpty]]" on-iron-resize="onResize" on-select-all="onSelectAll" on-unselect-all="onUnselectAll"
+            on-delete-selection="onDeleteSelection" on-star-selection="onStarSelection" on-unstar-selection="onUnstarSelection"
+            on-unstar-all="onUnstarAll" on-toggle-grid="onToggleGrid" filter-starred="{{filterStarred}}" has-selection="[[hasSelection]]"
+            selection-size="[[selectionSize]]" grid-selected="[[gridSelected]]" grid-mode="{{gridMode}}" favorite-options="[[favoritable]]">
         </list-controls>
         <!-- / Message Controls Action Bar -->
 
+        <!-- Refresh Button -->
+        <paper-fab
+            icon                    = "refresh"
+            on-tap                  = "_refreshQuestions">
+        </paper-fab>
+        <!-- / Refresh Button -->
+
         <!-- Questions List -->
-        <iron-list
-            id                      = "list"
-            as                      = "item"
-            selected-items          = "{{selection}}"
-            on-scroll               = "onScroll"
-            items                   = "[[filtered]]"
-            max-physical-count      = "1000"
-            grid$                   = "[[gridMode]]"
-            multi-selection>
+        <iron-list id="list" as="item" selected-items="{{selection}}" on-scroll="onScroll" items="[[filtered]]" max-physical-count="1000"
+            grid$="[[gridMode]]" multi-selection>
             <template>
-                <question-item
-                    on-tap              = "onTap"
-                    on-selected-toggled = "onSelectedToggled"
-                    on-favorite-toggled = "onFavoriteToggled"
-                    on-show-details     = "onShowDetails"
-                    select-mode         = "[[hasSelection]]"
-                    selected            = "[[selected]]"
-                    favorite            = "[[item.favorite]]"
-                    grid                = "[[gridMode]]"
-                    item                = "[[item]]"
-                    favoritable         = "[[favoritable]]">
+                <question-item on-tap="onTap" on-selected-toggled="onSelectedToggled" on-favorite-toggled="onFavoriteToggled" on-show-details="onShowDetails"
+                    select-mode="[[hasSelection]]" selected="[[selected]]" favorite="[[item.favorite]]" grid="[[gridMode]]" item="[[item]]"
+                    favoritable="[[favoritable]]">
                 </question-item>
             </template>
         </iron-list>
@@ -142,10 +123,10 @@
                     value: false,
                 }
             },
-            ready: function() {
+            ready: function () {
                 // ..
             },
-            onTap: function(e) {
+            onTap: function (e) {
                 let target = e.__target || e.target;
                 if (e.path) {
                     target = e.path[0];
@@ -160,7 +141,7 @@
                 else
                     list.selectIndex(e.model.index);
             },
-            onSelectedToggled: function(e) {
+            onSelectedToggled: function (e) {
                 const list = this.$.list;
                 if (e.model.selected) {
                     list.deselectIndex(e.model.index);
@@ -168,21 +149,21 @@
                     list.selectIndex(e.model.index);
                 }
             },
-            onFavoriteToggled: function(e) {
+            onFavoriteToggled: function (e) {
                 var value = !e.model.item.favorite;
                 this.set('filtered.' + e.model.index + '.favorite', value);
                 this.fire('message', {
                     event: (value ? 'questionFavorite' : 'questionUnfavorite'),
-                    data: [e.model.item.zammad_id],
+                    data: [e.model.item.id],
                 });
             },
-            _filter: function(item) {
+            _filter: function (item) {
                 if (this.filterStarred) {
                     return !!item.favorite;
                 }
                 return true;
             },
-            _filterStarredChanged: function(filterStarred) {
+            _filterStarredChanged: function (filterStarred) {
                 if (!filterStarred) {
                     this.items = JSON.parse(JSON.stringify(this.items));
                 }
@@ -193,27 +174,27 @@
                 var index = this.scrollIndex;
                 if (!filterStarred) {
                     // There must be a cleaner way to do this!
-                    window.setTimeout(function() {
+                    window.setTimeout(function () {
                         this.$.list.scrollToIndex(index);
                         this._updateScrollIndex();
                     }.bind(this), 2);
                 }
             },
-            _updateIsEmpty: function(filtered) {
+            _updateIsEmpty: function (filtered) {
                 var nothing = !filtered.length;
                 if (this.isEmpty != nothing) {
                     this.isEmpty = nothing;
                 }
             },
-            _updateScrollIndex: function() {
+            _updateScrollIndex: function () {
                 if (this.filterStarred) {
                     this.atEnd = true;
                 } else {
                     var list = this.$.list;
                     this.scrollIndex = list.firstVisibleIndex;
-                    this.atEnd = this.isEmpty 
-                        ? true 
-                        : list.lastVisibleIndex >= Math.max(0, this.filtered.length - 3);
+                    this.atEnd = this.isEmpty ?
+                        true :
+                        list.lastVisibleIndex >= Math.max(0, this.filtered.length - 3);
                 }
             },
             onShowDetails: function (e) {
@@ -223,21 +204,41 @@
                 details.open();
             },
 
-            onStarSelection: function(e) {
+            onStarSelection: function (e) {
                 let ids = [];
-                this.selection.forEach(item => ids.push(item.zammad_id));
+                this.selection.forEach(item => ids.push(item.id));
                 this.fire('message', {
                     event: 'questionFavorite',
                     data: ids
                 });
             },
 
-            onUnstarSelection: function(e) {
+            onUnstarSelection: function (e) {
                 let ids = [];
-                this.selection.forEach(item => ids.push(item.zammad_id));
+                this.selection.forEach(item => ids.push(item.id));
                 this.fire('message', {
                     event: 'questionUnfavorite',
                     data: ids
+                });
+            },
+
+            onDeleteConfirmed: function (e) {
+                let ids = [];
+                this.selection.forEach(item => ids.push(item.id));
+                this.fire('message', {
+                    event: 'questionDelete',
+                    data: ids
+                });
+            },
+
+            _refreshQuestions: function(e) {
+                this.fire('message', {
+                    event: 'questionsFetch',
+                    data: {
+                        filter: [],
+                        after_id: null,
+                        count: 1000
+                    }
                 });
             }
         });
