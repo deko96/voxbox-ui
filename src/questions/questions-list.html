@@ -86,6 +86,15 @@
             ],
             properties: {
                 selection: Array,
+                freshold: {
+                    type: Number,
+                    value: 0
+                },
+                unread: {
+                    type: Number,
+                    computed: '_unreadCount(filtered, freshold, items, items.*)',
+                    notify: true,
+                },
                 filtered: {
                     type: Array,
                     value: [],
@@ -124,7 +133,10 @@
                 }
             },
             ready: function () {
-                // ..
+                var freshold = localStorage.getItem('__voxbox__fresh-qa');
+                if (freshold) {
+                    this.freshold = Number(freshold);
+                }
             },
             onTap: function (e) {
                 let target = e.__target || e.target;
@@ -156,6 +168,24 @@
                     event: (value ? 'questionFavorite' : 'questionUnfavorite'),
                     data: [e.model.item.id],
                 });
+            },
+            onScroll: function() {
+                this._updateScrollIndex();
+                var last = this.$.list.lastVisibleIndex;
+                if (last > this.freshold) {
+                    this.freshold = last;
+                }
+                if (this._scrollTimeout) {
+                    window.clearTimeout(this._scrollTimeout);
+                }
+                this._scrollTimeout = window.setTimeout(function() {
+                    this._updateLocalStorage();
+                }.bind(this), 100);
+            },
+            _scrollToLast: function() {
+                this.$.list.scrollToIndex(this.filtered.length - 1);
+                this.freshold = this.filtered.length;
+                this._updateLocalStorage();
             },
             _filter: function (item) {
                 if (this.filterStarred) {
@@ -229,6 +259,10 @@
                     event: 'questionDelete',
                     data: ids
                 });
+                if (ids.length) {
+                    this.freshold = Math.max(0, this.freshold - ids.length);
+                    this._updateLocalStorage();
+                }
             },
 
             _refreshQuestions: function(e) {
@@ -240,6 +274,14 @@
                         count: 1000
                     }
                 });
+            },
+
+            _unreadCount: function(filtered, freshold, items) {
+                return Math.max(0, items.length - this.freshold);
+            },
+
+            _updateLocalStorage: function() {
+                localStorage.setItem('__voxbox__fresh-qa', this.freshold);
             }
         });
     </script>

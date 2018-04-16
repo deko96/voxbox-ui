@@ -152,8 +152,8 @@
               <div class="layout vertical center">
                 <iron-icon icon="communication:message"></iron-icon>
                 <label>SMS Inbox
-                  <template is="dom-if" if="[[unread]]">
-                    <paper-badge for="number" label="[[unread]]">
+                  <template is="dom-if" if="[[unreadInbox]]">
+                    <paper-badge for="number" label="[[unreadInbox]]">
                     </paper-badge>
                   </template>
                 </label>
@@ -169,8 +169,8 @@
               <div class="layout vertical center">
                 <iron-icon icon="communication:forum"></iron-icon>
                 <label>Q+A
-                  <template is="dom-if" if="[[unread]]">
-                    <paper-badge for="number" label="[[unread]]">
+                  <template is="dom-if" if="[[unreadQuestions]]">
+                    <paper-badge for="number" label="[[unreadQuestions]]">
                     </paper-badge>
                   </template>
                 </label>
@@ -182,13 +182,13 @@
           <channel-list id="calls" diff="[[diff]]" on-message="sendMessage" on-update-contact="handleUpdateContact" channels="[[channels]]"
             lines="[[lines]]">
           </channel-list>
-          <message-inbox id="messageInbox" on-message="sendMessage" unread="{{unread}}" items="[[inbox]]" channels="[[activeChannels]]"
+          <message-inbox id="messageInbox" on-message="sendMessage" unread="{{unreadInbox}}" items="[[inbox]]" channels="[[activeChannels]]"
             lines="[[activeLines]]" debug="[[debug]]">
           </message-inbox>
           <!-- <message-outbox id="outbox" on-message="sendMessage" items="[[outbox]]" channels="[[activeChannels]]" lines="[[activeLines]]"
             debug="[[debug]]">
           </message-outbox> -->
-          <questions-list id="questions" on-message="sendMessage" items="[[questions]]" lines="[[activeLines]]" debug="[[debug]]">
+          <questions-list id="questions" on-message="sendMessage" unread="{{unreadQuestions}}" items="[[questions]]" lines="[[activeLines]]" debug="[[debug]]">
           </questions-list>
         </iron-pages>
       </app-header-layout>
@@ -236,9 +236,13 @@
           computed: '_activeLines(lines, lines.*)',
           notify: true
         },
-        unread: {
+        unreadInbox: {
           type: Number,
           value: 0,
+        },
+        unreadQuestions: {
+          type: Number,
+          value: 0
         },
         boxConnected: {
           type: Boolean,
@@ -521,6 +525,21 @@
             if (last > inbox.freshold) {
               inbox.freshold = last;
               inbox._updateLocalStorage();
+            }
+          }.bind(this));
+        } else if (2 === tab) {
+          window.setTimeout(function() {
+            let questions = this.$$('#questions');
+            let list = questions.$.list;
+            let last = list.lastVisibleIndex;
+            if (isNaN(last) || last < 0) {
+              list.scrollToIndex(0);
+              last = list.lastVisibleIndex;
+            }
+            questions._updateScrollIndex();
+            if (last > questions.freshold) {
+              questions.freshold = last;
+              questions._updateLocalStorage();
             }
           }.bind(this));
         }
