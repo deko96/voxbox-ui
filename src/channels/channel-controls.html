@@ -167,7 +167,7 @@
       },
 
       _showCloseButton: function(mode, type) {
-        return mode === 'free' && type === 'sip';
+        return ['free', 'defunct'].includes(mode) && type === 'sip';
       },
 
       closeChannel: function() {

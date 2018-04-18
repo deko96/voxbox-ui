@@ -359,20 +359,22 @@
             }
             break;
           case 'questionsUpdate':
-            Object.keys(payload.data).forEach((key, i) => {
-              let question = payload.data[key];
+            let questions = payload.data;
+            questions.forEach(questionData => {
+              let id = questionData.id;
+              let question = questionData.data;
+              question.id = id;
+              let index = this.questions.findIndex(question => question.id === id);
               if (!question) {
-                let index = this.questions.findIndex(question => question.id === +key);
                 if (index > -1) {
                   this.splice('questions', index, 1);
                 }
               } else {
-                let questionIndex = this._findQuestionIndex(question);
                 question.favorite = question.favorite === "1" ? 1 : 0;
 
-                if (questionIndex > -1) {
-                  let tmpQuestions = [...this.get('questions')];
-                  tmpQuestions[questionIndex] = question;
+                if (index > -1) {
+                  let tmpQuestions = [...this.questions];
+                  tmpQuestions[index] = question;
                   this.setProperties({
                     questions: tmpQuestions
                   });
@@ -381,6 +383,28 @@
                 }
               }
             });
+            // Object.keys(payload.data).forEach((key, i) => {
+            //   let question = payload.data[key];
+            //   if (!question) {
+            //     let index = this.questions.findIndex(question => question.id === +key);
+            //     if (index > -1) {
+            //       this.splice('questions', index, 1);
+            //     }
+            //   } else {
+            //     let questionIndex = this._findQuestionIndex(question);
+            //     question.favorite = question.favorite === "1" ? 1 : 0;
+
+            //     if (questionIndex > -1) {
+            //       let tmpQuestions = [...this.get('questions')];
+            //       tmpQuestions[questionIndex] = question;
+            //       this.setProperties({
+            //         questions: tmpQuestions
+            //       });
+            //     } else {
+            //       this.push('questions', question);
+            //     }
+            //   }
+            // });
             break;
           case 'initialize':
             if (this.debug) {
@@ -458,6 +482,22 @@
                 }
               } else {
                 this.push('channels', channel);
+              }
+            }, this);
+            break;
+          case 'lineUpdate':
+            Object.keys(payload.data).forEach(function(key) {
+              let line = payload.data[key];
+              if (line) line.id = key;
+              let index = this.lines.findIndex(l => l.id === line.id);
+              if (index > -1) {
+                if (!line) {
+                  this.splice('lines', index, 1);
+                } else {
+                  this.set(['lines', index].join('.'), line);
+                }
+              } else {
+                this.push('lines', line);
               }
             }, this);
             break;
