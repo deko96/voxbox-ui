@@ -188,7 +188,7 @@
           <!-- <message-outbox id="outbox" on-message="sendMessage" items="[[outbox]]" channels="[[activeChannels]]" lines="[[activeLines]]"
             debug="[[debug]]">
           </message-outbox> -->
-          <questions-list id="questions" on-message="sendMessage" unread="{{unreadQuestions}}" items="[[questions]]" lines="[[activeLines]]" debug="[[debug]]">
+          <questions-list id="questions" on-message="sendMessage" unread="{{unreadQuestions}}" items$="[[questions]]" lines="[[activeLines]]" debug="[[debug]]">
           </questions-list>
         </iron-pages>
       </app-header-layout>
@@ -216,7 +216,8 @@
         },
         questions: {
           type: Array,
-          value: []
+          value: [],
+          notify: true
         },
         channels: {
           type: Array,
@@ -383,28 +384,6 @@
                 }
               }
             });
-            // Object.keys(payload.data).forEach((key, i) => {
-            //   let question = payload.data[key];
-            //   if (!question) {
-            //     let index = this.questions.findIndex(question => question.id === +key);
-            //     if (index > -1) {
-            //       this.splice('questions', index, 1);
-            //     }
-            //   } else {
-            //     let questionIndex = this._findQuestionIndex(question);
-            //     question.favorite = question.favorite === "1" ? 1 : 0;
-
-            //     if (questionIndex > -1) {
-            //       let tmpQuestions = [...this.get('questions')];
-            //       tmpQuestions[questionIndex] = question;
-            //       this.setProperties({
-            //         questions: tmpQuestions
-            //       });
-            //     } else {
-            //       this.push('questions', question);
-            //     }
-            //   }
-            // });
             break;
           case 'initialize':
             if (this.debug) {
