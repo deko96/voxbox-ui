@@ -25,6 +25,11 @@
             favoritable: {
                 type: Boolean,
                 value: false
+            },
+            backendFilter: {
+                type: Boolean,
+                value: false,
+                notify: true
             }
         },
 
@@ -155,7 +160,7 @@
             }
         },
 
-        _selectAllComplete: function () { },
+        _selectAllComplete: function () {},
 
         _process: function (selection, chunk, done, size) {
             if (!size) {
@@ -237,6 +242,12 @@
                 event: 'messageSend',
                 data: payload,
             });
+        },
+
+        onDateFilter: function () {
+            var dialog = this.$['datepicker-dialog'];
+            Polymer.dom(document.querySelector('body')).appendChild(dialog);
+            dialog.open();
         }
 
     };

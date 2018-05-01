@@ -1,0 +1,124 @@
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/range-datepicker/range-datepicker.html">
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<dom-module id="datepicker-dialog">
+    <template>
+        <style>
+            .header-buttons {
+                display: flex;
+                justify-content: center;
+            }
+            .footer-buttons {
+                display: flex;
+                justify-content: right;
+            }
+            range-datepicker {
+                display: flex;
+                justify-content: center;
+            }
+            paper-button[dialog-confirm] {
+                color: rgb(0, 188, 212);
+            }
+
+            paper-button[dialog-dismiss] {
+                color: red;
+            }
+        </style>
+        <paper-dialog modal id="dialog" opened="{{opened}}">
+            <div class="header-buttons">
+                <paper-button on-tap="_quickFilter" id="today">Today</paper-button>
+                <paper-button on-tap="_quickFilter" id="week">Past 7 Days</paper-button>
+                <paper-button on-tap="_quickFilter" id="month">Past 30 Days</paper-button>
+            </div>
+            <range-datepicker date-from="{{from}}" date-to="{{to}}" force-narrow$="isNarrow" month="[[month]]" max="[[max]]"></range-datepicker>
+            <div class="footer-buttons">
+                <paper-button dialog-confirm autofocus on-tap="_filter">Filter</paper-button>
+                <paper-button dialog-dismiss on-tap="close">Cancel</paper-button>
+            </div>
+        </paper-dialog>
+    </template>
+    <script>
+        var NARROW_TRESHOLD = 600;
+        Polymer({
+
+            is: 'datepicker-dialog',
+
+            properties: {
+                opened: {
+                    type: Boolean,
+                    value: false
+                },
+                isNarrow: {
+                    type: Boolean,
+                    computed: '_computedIsNarrow()'
+                },
+                month: {
+                    type: String,
+                    computed: '_computedMonth(from)',
+                    notify: true
+                },
+                max: {
+                    type: Number,
+                    value: Date.now() / 1000
+                },
+                from: Number,
+                to: Number
+            },
+
+            open: function () {
+                this.$.dialog.open();
+            },
+
+            close: function () {
+                this.$.dialog.close();
+            },
+
+            _filter: function () {
+                let from = new Date(+this.from * 1000).setHours(0, 0, 0);
+                let to = new Date(+this.to * 1000).setHours(23, 59, 59);
+                this.fire('date-selected', {
+                    from: from / 1000,
+                    to: to / 1000
+                });
+            },
+
+            _quickFilter: function(event) {
+                switch(event.target.id) {
+                    case 'today':
+                        this._setRange(0);
+                        break;
+                    case 'week':
+                        this._setRange(7);
+                        break;
+                    case 'month':
+                        this._setRange(30);
+                        break;
+                    default:
+                }
+            },
+
+            _setRange: function(pastDays) {
+                let to = new Date();
+                to.setHours(0, 0, 0, 0);
+                let from = new Date(to);
+                if (pastDays) {
+                    from.setTime(from.getTime() - this._daysToMs(pastDays));
+                }
+                this.from = from.getTime() / 1000;
+                this.to = to.getTime() / 1000;
+            },
+
+            _daysToMs: function(days) {
+                return 1000 * 60 * 60 * 24 * days;
+            },
+
+            _computedIsNarrow: function() {
+                return window.innerWidth < NARROW_TRESHOLD;
+            },
+
+            _computedMonth: function(from) {
+                return new Date(from * 1000).getMonth() + 1;
+            }
+        });
+    </script>
+</dom-module>

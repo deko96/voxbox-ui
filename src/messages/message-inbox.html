@@ -12,6 +12,7 @@
 <link rel="import" href="../core/spinner-backdrop.html">
 <link rel="import" href="message-details-dialog.html">
 <link rel="import" href="message-item.html">
+<link rel="import" href="../core/datepicker-dialog.html">
 
 <dom-module id="message-inbox">
   <template>
@@ -63,6 +64,10 @@
     </message-details-dialog>
     <!-- / Message Details Dialog -->
 
+    <!-- Datepicker Dialog -->
+    <datepicker-dialog id="datepicker-dialog" on-date-selected="onDateSelected"></datepicker-dialog>
+    <!-- / Datepicker Dialog -->
+
     <!-- No Messages Block -->
     <template is="dom-if" if="[[isEmpty]]">
       <div
@@ -105,12 +110,15 @@
       on-unstar-selection     = "onUnstarSelection"
       on-unstar-all           = "onUnstarAll"
       on-toggle-grid          = "onToggleGrid"
+      on-date-filter          = "onDateFilter"
+      on-clear-date-filter    = "onClearDateFilter"
       filter-starred          = "{{filterStarred}}"
       has-selection           = "[[hasSelection]]"
       selection-size          = "[[selectionSize]]"
       grid-selected           = "[[gridSelected]]"
       grid-mode               = "{{gridMode}}"
-      favorite-options        = "[[favoritable]]">
+      favorite-options        = "[[favoritable]]"
+      backend-filter          = "[[backendFilter]]">
     </list-controls>
     <!-- / Message Controls Action Bar -->
 
@@ -264,6 +272,27 @@
             }
           });
           this.filterStarred = false;
+        },
+
+        onDateSelected: function(event, data) {
+          this.backendFilter = true;
+          this.fire('message', {
+            event: 'inboxFetchRange',
+            data: {
+              from: data.from,
+              to: data.to
+            }
+          });
+        },
+        onClearDateFilter: function() {
+          this.backendFilter = false;
+          this.fire('message', {
+            event: 'inboxFetchRange',
+            data: {
+              from: null,
+              to: null
+            }
+          })
         },
 
         onScroll: function() {

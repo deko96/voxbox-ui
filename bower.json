@@ -53,6 +53,7 @@
     "font-awesome-animation": "^0.1.0",
     "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#^2.1.0",
     "paper-audio-player": "deko96/paper-audio-player#2.0.0",
-    "paper-tags-input": "deko96/paper-tags-input#2.0.0"
+    "paper-tags-input": "deko96/paper-tags-input#2.0.0",
+    "range-datepicker": "^0.0.25"
   }
 }
