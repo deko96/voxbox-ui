@@ -31,7 +31,7 @@
             }
 
             paper-button[dialog-confirm] {
-                color: rgb(0, 188, 212);
+                color: #065a65;
             }
 
             paper-button[dialog-dismiss] {
@@ -39,7 +39,7 @@
             }
 
             paper-button.reset {
-                color: orange;
+                color: black;
             }
         </style>
         <paper-dialog modal id="dialog" opened="{{opened}}">
@@ -183,7 +183,7 @@
                 let fromStr = this._formatDateString(dateFrom);
                 let toStr = this._formatDateString(dateTo);
                 if (fromStr === toStr) return toStr;
-                return [fromStr, toStr].join(' <==> ');
+                return [fromStr, toStr].join(' ↔ ');
             }
         });
     </script>
