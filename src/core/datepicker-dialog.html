@@ -4,18 +4,32 @@
 <dom-module id="datepicker-dialog">
     <template>
         <style>
-            .header-buttons {
+            .header {
                 display: flex;
                 justify-content: center;
             }
-            .footer-buttons {
+
+            .footer {
                 display: flex;
+                justify-content: space-between;
+            }
+
+            .footer .left {
+                display: inline-flex;
+                justify-content: left;
+                align-self: center;
+            }
+
+            .footer .right {
+                display: inline-flex;
                 justify-content: right;
             }
+
             range-datepicker {
                 display: flex;
                 justify-content: center;
             }
+
             paper-button[dialog-confirm] {
                 color: rgb(0, 188, 212);
             }
@@ -23,17 +37,27 @@
             paper-button[dialog-dismiss] {
                 color: red;
             }
+
+            paper-button.reset {
+                color: orange;
+            }
         </style>
         <paper-dialog modal id="dialog" opened="{{opened}}">
-            <div class="header-buttons">
+            <div class="header">
                 <paper-button on-tap="_quickFilter" id="today">Today</paper-button>
                 <paper-button on-tap="_quickFilter" id="week">Past 7 Days</paper-button>
                 <paper-button on-tap="_quickFilter" id="month">Past 30 Days</paper-button>
             </div>
             <range-datepicker date-from="{{from}}" date-to="{{to}}" force-narrow$="isNarrow" month="[[month]]" max="[[max]]"></range-datepicker>
-            <div class="footer-buttons">
-                <paper-button dialog-confirm autofocus on-tap="_filter">Filter</paper-button>
-                <paper-button dialog-dismiss on-tap="close">Cancel</paper-button>
+            <div class="footer">
+                <div class="left">
+                    [[chosenRange(from, to)]]
+                </div>
+                <div class="right">
+                    <paper-button dialog-confirm autofocus on-tap="filter" disabled$="[[!canResetOrFilter]]">Filter</paper-button>
+                    <paper-button class="reset" on-tap="reset" disabled$="[[!canResetOrFilter]]">Reset</paper-button>
+                    <paper-button dialog-dismiss on-tap="close">Cancel</paper-button>
+                </div>
             </div>
         </paper-dialog>
     </template>
@@ -61,8 +85,17 @@
                     type: Number,
                     value: Date.now() / 1000
                 },
+                canResetOrFilter: {
+                    type: Boolean,
+                    computed: '_computedCanResetOrFilter(from, to)',
+                    notify: true
+                },
                 from: Number,
                 to: Number
+            },
+
+            ready: function() {
+                this._setRange(0);
             },
 
             open: function () {
@@ -73,17 +106,22 @@
                 this.$.dialog.close();
             },
 
-            _filter: function () {
-                let from = new Date(+this.from * 1000).setHours(0, 0, 0);
-                let to = new Date(+this.to * 1000).setHours(23, 59, 59);
+            filter: function () {
+                let from = (+this.from * 1000);
+                let to = (+this.to * 1000) + (this._daysToMs(1) - 1);
                 this.fire('date-selected', {
-                    from: from / 1000,
-                    to: to / 1000
+                    from: from,
+                    to: to
                 });
             },
 
-            _quickFilter: function(event) {
-                switch(event.target.id) {
+            reset: function() {
+                this.from = undefined;
+                this.to = undefined;
+            },
+
+            _quickFilter: function (event) {
+                switch (event.target.id) {
                     case 'today':
                         this._setRange(0);
                         break;
@@ -97,27 +135,55 @@
                 }
             },
 
-            _setRange: function(pastDays) {
+            _setRange: function (pastDays) {
                 let to = new Date();
                 to.setHours(0, 0, 0, 0);
                 let from = new Date(to);
                 if (pastDays) {
-                    from.setTime(from.getTime() - this._daysToMs(pastDays));
+                    from.setTime(from.getTime() - this._daysToMs(pastDays - 1));
                 }
                 this.from = from.getTime() / 1000;
                 this.to = to.getTime() / 1000;
             },
 
-            _daysToMs: function(days) {
+            _daysToMs: function (days) {
                 return 1000 * 60 * 60 * 24 * days;
             },
 
-            _computedIsNarrow: function() {
+            _computedIsNarrow: function () {
                 return window.innerWidth < NARROW_TRESHOLD;
             },
 
-            _computedMonth: function(from) {
+            _computedMonth: function (from) {
+                if (!from) {
+                    return new Date(Date.now()).getMonth() + 1;
+                }
                 return new Date(from * 1000).getMonth() + 1;
+            },
+
+            _computedCanResetOrFilter: function(from, to) {
+                return from && to;
+            },
+
+            _formatNumberLeadingZero: function(number, digits) {
+                return ('0000000' + number).slice(-digits);
+            },
+
+            _formatDateString: function(date) {
+                let year = date.getFullYear();
+                let month = this._formatNumberLeadingZero(date.getMonth() + 1, 2);
+                let day = this._formatNumberLeadingZero(date.getDate(), 2);
+                return [year, month, day].join('-');
+            },
+
+            chosenRange: function(from, to) {
+                if(!from && !to) return null;
+                let dateFrom = new Date(+from * 1000);
+                let dateTo = new Date(+to * 1000);
+                let fromStr = this._formatDateString(dateFrom);
+                let toStr = this._formatDateString(dateTo);
+                if (fromStr === toStr) return toStr;
+                return [fromStr, toStr].join(' <==> ');
             }
         });
     </script>

@@ -289,8 +289,8 @@
           this.fire('message', {
             event: 'inboxFetchRange',
             data: {
-              from: null,
-              to: null
+              from: new Date(Date.now()).setHours(0, 0, 0, 0),
+              to: Date.now()
             }
           })
         },

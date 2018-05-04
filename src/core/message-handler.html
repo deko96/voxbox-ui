@@ -15,6 +15,7 @@
         let PONG = null;
         let RECONNECT = null;
         let RECONNECT_ATTEMPTS = 0;
+        let self = null;
 
         Polymer({
             is: 'message-handler',
@@ -34,9 +35,10 @@
                     value: false
                 }
             },
-            
+
             ready() {
                 //.. WebSocket component is ready here we should connect.
+                self = this;
                 this.connect();
             },
 
@@ -50,7 +52,8 @@
                     socket.onopen = this._onOpen.bind(this);
                     socket.onmessage = this._onMessage.bind(this);
                     socket.onerror = this._onError.bind(this);
-                    socket.onclose = this._onClose.bind(this);
+                    socket.onclose = this._onClose;
+                    // socket.onclose = this._onClose.bind(this);
 
                     this.socket = socket;
                 }
@@ -132,21 +135,21 @@
 
             _onClose(event) {
                 // .. Connection terminated
-                if (this.socket.retired) {
-                    if (this.debug) {
+                if (this.retired) {
+                    if (self.debug) {
                         console.log('Retired socket closed!');
                     }
                 } else {
                     if (event.code === 1006) {
-                        RECONNECT = setTimeout(this.connect.bind(this), this._reconnectIn());
+                        RECONNECT = setTimeout(self.connect.bind(self), self._reconnectIn());
                     }
 
-                    if (!this.connected) {
-                        if (this.debug) {
+                    if (!self.connected) {
+                        if (self.debug) {
                             console.log('Socket not connected!');
                         }
                     } else {
-                        this.connected = null;
+                        self.connected = null;
                         clearTimeout(PONG);
                         clearInterval(PING);
                     }
