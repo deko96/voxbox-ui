@@ -3,6 +3,7 @@
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
 <link rel="import" href="../../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner-lite.html">
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="message-compose-dialog.html">
 <link rel="import" href="../core/confirm-delete-dialog.html">
@@ -13,11 +14,15 @@
 <link rel="import" href="message-details-dialog.html">
 <link rel="import" href="message-item.html">
 <link rel="import" href="../core/datepicker-dialog.html">
+<link rel="import" href="../core/header-toolbar.html">
 
 <dom-module id="message-inbox">
   <template>
     <style include="list-styles"></style>
     <style>
+      :host {
+        position: relative;
+      }
       paper-fab {
         position: fixed;
         right: 30px;
@@ -33,9 +38,13 @@
         --paper-fab-background: white;
         --paper-fab-keyboard-focus-background: #f4f4f4;
       }
+      iron-list {
+        --iron-list-items-container: {
+          margin-top: 57px;
+        };
+      }
 
     </style>
-
     <!-- Message Compose Dialog -->
     <message-compose-dialog
       id                      = "message-compose-dialog"
@@ -44,8 +53,8 @@
     </message-compose-dialog>
     <!-- / Message Compose Dialog -->
     <!-- Confirm Message Delete Dialog -->
-    <confirm-delete-dialog 
-      id                      = "confirm-delete-dialog" 
+    <confirm-delete-dialog
+      id                      = "confirm-delete-dialog"
       on-delete-confirmed     = "_handleDeleteSelection"
       selection-size          = "[[selectionSize]]">
     </confirm-delete-dialog>
@@ -73,7 +82,12 @@
       <div
         class                   = "no-items">
         <paper-material>
-          There are no messages here.
+          <template is="dom-if" if="[[loading]]">
+            <paper-spinner-lite active></paper-spinner-lite>
+          </template>
+          <template is="dom-if" if="[[!loading]]">
+            There are no messages here.
+          </template>
         </paper-material>
       </div>
     </template>
@@ -98,6 +112,10 @@
     </paper-fab>
     <!-- / Open Message Dialog Fab Button -->
 
+    <header-toolbar>
+      <div slot="title">Inbox ([[filterDate]])</div>
+    </header-toolbar>
+
     <!-- Message Controls Action Bar -->
     <list-controls
       id                      = "controls"
@@ -111,14 +129,12 @@
       on-unstar-all           = "onUnstarAll"
       on-toggle-grid          = "onToggleGrid"
       on-date-filter          = "onDateFilter"
-      on-clear-date-filter    = "onClearDateFilter"
       filter-starred          = "{{filterStarred}}"
       has-selection           = "[[hasSelection]]"
       selection-size          = "[[selectionSize]]"
       grid-selected           = "[[gridSelected]]"
       grid-mode               = "{{gridMode}}"
-      favorite-options        = "[[favoritable]]"
-      backend-filter          = "[[backendFilter]]">
+      favorite-options        = "[[favoritable]]">
     </list-controls>
     <!-- / Message Controls Action Bar -->
 
@@ -165,6 +181,10 @@
         is: 'message-inbox',
 
         properties: {
+          filterDate: {
+            type: String,
+            value: null
+          },
           filtered: {
             type: Array,
             value: [],
@@ -226,6 +246,11 @@
           if (freshold) {
             this.freshold = Number(freshold);
           }
+          let datepicker = this.$['datepicker-dialog'];
+          if (datepicker) {
+            datepicker._setRange(0);
+            datepicker.filter();
+          }
         },
         onSelectedToggled: function(e) {
           const list = this.$.list;
@@ -240,7 +265,7 @@
           var value = !e.model.item.favorite;
           this.set('filtered.' + e.model.index + '.favorite', value);
           this.fire('message', {
-            event: (value ? 'messageFavoriteSet' : 'messageFavoriteUnset'),
+            event: (value ? 'message:favorite' : 'message:unfavorite'),
             data: [e.model.item.id],
           });
         },
@@ -256,9 +281,9 @@
         onUnstarAll: function() {
           var indices = [];
           var ids = [];
-          this.filtered.forEach(function(item) { 
-            indices.push(this.items.indexOf(item)); 
-            ids.push(item.id); 
+          this.filtered.forEach(function(item) {
+            indices.push(this.items.indexOf(item));
+            ids.push(item.id);
           }, this);
           this._process(indices, function(index) {
             this.set('items.' + index + '.favorite', false);
@@ -266,7 +291,7 @@
             this.$.list.clearSelection();
             if (ids.length) {
               this.fire('message', {
-                event: 'messageFavoriteUnset',
+                event: 'message:unfavorite',
                 data: ids,
               });
             }
@@ -275,24 +300,16 @@
         },
 
         onDateSelected: function(event, data) {
-          this.backendFilter = true;
+          let datepicker = this.$['datepicker-dialog'];
+          this.filterDate = datepicker.chosenRange(datepicker.from, datepicker.to);
+          this.loading = true;
           this.fire('message', {
-            event: 'inboxFetchRange',
+            event: 'message:fetch',
             data: {
               from: data.from,
               to: data.to
             }
           });
-        },
-        onClearDateFilter: function() {
-          this.backendFilter = false;
-          this.fire('message', {
-            event: 'inboxFetchRange',
-            data: {
-              from: new Date(Date.now()).setHours(0, 0, 0, 0),
-              to: Date.now()
-            }
-          })
         },
 
         onScroll: function() {
@@ -340,7 +357,7 @@
             if ('favorite' === prop) {
               if (ids.length) {
                 this.fire('message', {
-                  event: (value ? 'messageFavoriteSet' : 'messageFavoriteUnset'),
+                  event: (value ? 'message:favorite' : 'message:unfavorite'),
                   data: ids,
                 });
               }
@@ -356,7 +373,6 @@
           }
           this.$['array-filter'].update();
           this.$.list.clearSelection();
-          // this.selection = [];
 
           var index = this.scrollIndex;
           if (!filterStarred) {
@@ -368,23 +384,14 @@
           }
         },
 
-        // _gridModeChanged: function(gridMode) {
-        //   var list = this._getList();
-        //   this.updateGeometry();
-        //   list.scrollToIndex(this.scrollIndex);
-        //   this.$.list.clearSelection();
-        //   this.$.grid.clearSelection();
-        //   this.selection = [];
-        // },
-
         _updateScrollIndex: function() {
           if (this.filterStarred) {
             this.atEnd = true;
           } else {
             var list = this._getList();
             this.scrollIndex = list.firstVisibleIndex;
-            this.atEnd = this.isEmpty 
-              ? true 
+            this.atEnd = this.isEmpty
+              ? true
               : list.lastVisibleIndex >= Math.max(0, this.filtered.length - 3);
           }
         },

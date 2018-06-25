@@ -19,6 +19,7 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="core/message-handler.html">
 <link rel="import" href="channels/channel-list.html">
+<link rel="import" href="calls/call-list.html">
 <link rel="import" href="error-dialog.html">
 <link rel="import" href="messages/message-inbox.html">
 <link rel="import" href="messages/message-outbox.html">
@@ -40,7 +41,8 @@
       paper-tabs {
         background-color: rgb(0, 188, 212);
         color: #fff;
-        width: 100vw;
+        width: 100%;
+        /* width: 100vw; */
         height: 68px;
         --paper-tabs-selection-bar-color: var(--paper-pink-a200);
       }
@@ -76,7 +78,8 @@
       }
 
       .spinner-container {
-        width: 100vw;
+        width: 100%;
+        /* width: 100vw; */
         height: 100vh;
         display: flex;
         position: absolute;
@@ -148,6 +151,12 @@
                 <label>Calls</label>
               </div>
             </paper-tab>
+			<paper-tab>
+				<div class="layout vertical center">
+					<iron-icon icon="history"></iron-icon>
+					<label>Call History</label>
+				</div>
+			</paper-tab>
             <paper-tab>
               <div class="layout vertical center">
                 <iron-icon icon="communication:message"></iron-icon>
@@ -182,13 +191,21 @@
           <channel-list id="calls" diff="[[diff]]" on-message="sendMessage" on-update-contact="handleUpdateContact" channels="[[channels]]"
             lines="[[lines]]">
           </channel-list>
-          <message-inbox id="messageInbox" on-message="sendMessage" unread="{{unreadInbox}}" items="[[inbox]]" channels="[[activeChannels]]"
-            lines="[[activeLines]]" debug="[[debug]]">
+		      <call-list id="calls" on-message="sendMessage" items$="[[callHistory]]" debug="[[debug]]" loading="{{callHistoryLoading}}"></call-list>
+          <message-inbox
+            id          = "messageInbox"
+            on-message  = "sendMessage"
+            unread      = "{{unreadInbox}}"
+            items       = "[[inbox]]"
+            channels    = "[[activeChannels]]"
+            lines       = "[[activeLines]]"
+            loading     = "{{inboxLoading}}"
+            debug       = "[[debug]]">
           </message-inbox>
           <!-- <message-outbox id="outbox" on-message="sendMessage" items="[[outbox]]" channels="[[activeChannels]]" lines="[[activeLines]]"
             debug="[[debug]]">
           </message-outbox> -->
-          <questions-list id="questions" on-message="sendMessage" unread="{{unreadQuestions}}" items$="[[questions]]" lines="[[activeLines]]" debug="[[debug]]">
+          <questions-list id="questions" on-message="sendMessage" unread="{{unreadQuestions}}" items$="[[questions]]" lines="[[activeLines]]" debug="[[debug]]" loading="{{questionsLoading}}">
           </questions-list>
         </iron-pages>
       </app-header-layout>
@@ -210,6 +227,11 @@
           type: Array,
           value: [],
         },
+        inboxLoading: {
+          type: Boolean,
+          value: false,
+          notify: true
+        },
         outbox: {
           type: Array,
           value: [],
@@ -217,6 +239,21 @@
         questions: {
           type: Array,
           value: [],
+          notify: true
+        },
+        questionsLoading: {
+          type: Boolean,
+          value: false,
+          notify: true
+        },
+        callHistory: {
+          type: Array,
+          value: [],
+          notify: true
+        },
+        callHistoryLoading: {
+          type: Boolean,
+          value: false,
           notify: true
         },
         channels: {
@@ -305,7 +342,43 @@
           console.log(payload);
         }
         switch (payload.event) {
-          case 'inboxMessages':
+          // case 'inboxMessages':
+          case 'calls:list':
+            let calls = payload.data.calls;
+            let callsList = [];
+            for (let i = 0; i < calls.length; ++i) {
+              let call = calls[i];
+              callsList.push(call);
+            }
+            this.set('callHistory', callsList.reverse());
+            this.callHistoryLoading = false;
+            break;
+          case 'calls:update':
+            let updatedCalls = payload.data;
+
+            Object.keys(updatedCalls).forEach(function (key, i) {
+              let updatedCall = updatedCalls[key];
+              if (updatedCall) {
+                let callIndex = this._findCallIndex(updatedCall);
+
+                if (callIndex > -1) {
+                  let tmpCalls = [...this.callHistory];
+                  tmpCalls[callIndex] = updatedCall;
+                  this.setProperties({
+                    callHistory: tmpCalls
+                  });
+                } else {
+                  this.push('callHistory', updatedCall);
+                }
+              } else {
+                let callIndex = this._findCallIndex({ id: key });
+                if (callIndex > -1) {
+                  this.splice('callHistory', callIndex, 1);
+                }
+              }
+            }, this);
+            break;
+          case 'message:list':
             let messages = payload.data.messages;
             let inbox = [],
               outbox = [];
@@ -318,33 +391,43 @@
 
             this.set('inbox', inbox.reverse());
             this.set('outbox', outbox.reverse());
+            this.inboxLoading = false;
             break;
-          case 'messageSent':
+          // case 'messageSent':
+          case 'message:sent':
             var toast = document.createElement('paper-toast');
             toast.text = 'Message successfully sent.';
             document.body.appendChild(toast);
             toast.show();
             break;
-          case 'inboxUpdate':
+          case 'message:update':
+          // case 'inboxUpdate':
             let data = payload.data;
             let count = 0;
             let only = null;
 
             Object.keys(data).forEach(function (key, i) {
               let message = data[key];
-              let messageType = message.type === 'sms_in' ? 'inbox' : 'outbox';
-              let messageIndex = this._findMessageIndex(message);
-              // let messageIndex = messageType === 'inbox' ? this.inbox.findIndex(msg => msg.id === message.id) : this.outbox.findIndex(msg => msg.id === message.id);
-              if (messageIndex > -1) {
-                let mailbox = [...messageType === 'inbox' ? this.inbox : this.outbox];
-                mailbox[messageIndex] = message;
-                this.setProperties({
-                  [messageType]: mailbox
-                });
+              if (message) {
+                let messageType = message.type === 'sms_in' ? 'inbox' : 'outbox';
+                let messageIndex = this._findMessageIndex(message);
+                // let messageIndex = messageType === 'inbox' ? this.inbox.findIndex(msg => msg.id === message.id) : this.outbox.findIndex(msg => msg.id === message.id);
+                if (messageIndex > -1) {
+                  let mailbox = [...messageType === 'inbox' ? this.inbox : this.outbox];
+                  mailbox[messageIndex] = message;
+                  this.setProperties({
+                    [messageType]: mailbox
+                  });
+                } else {
+                  this.push(messageType, message)
+                  only = message;
+                  count++;
+                }
               } else {
-                this.push(messageType, message)
-                only = message;
-                count++;
+                let messageIndex = this._findMessageIndex({ id: key, type: 'sms_in' });
+                if (messageIndex > -1) {
+                  this.splice('inbox', messageIndex, 1);
+                }
               }
             }, this);
             if (count) {
@@ -359,7 +442,16 @@
               toast.show();
             }
             break;
-          case 'questionsUpdate':
+          // case 'questionsUpdate':
+          case 'questions:list':
+            let tmpQuestions = [];
+            payload.data.forEach(question => {
+              tmpQuestions.push(question.data);
+            });
+            this.set('questions', tmpQuestions);
+            this.questionsLoading = false;
+            break;
+          case 'questions:update':
             let questions = payload.data;
             questions.forEach(questionData => {
               let id = questionData.id;
@@ -397,16 +489,23 @@
             //   count: 1000,
             // });
 
-            this.send('inboxFetchRange', {
-              from: new Date(Date.now()).setHours(0, 0, 0, 0),
-              to: Date.now()
-            });
+            // this.send('inboxFetchRange', {
+            //   from: new Date(Date.now()).setHours(0, 0, 0, 0),
+            //   to: Date.now()
+            // });
 
-            this.send('questionsFetch', {
-              filter: [],
-              after_id: null,
-              count: 1000
-            });
+            // this.send('message:fetch', {
+            //   from: this.todayMidnight,
+            //   to: Date.now()
+            // });
+            // this.send('questions:fetch', {
+            //   from: this.todayMidnight,
+            //   to: Date.now()
+            // });
+            // this.send('history:fetch', {
+            //   from: this.todayMidnight,
+            //   to: Date.now()
+            // });
 
             this.set('channels', []);
             var channels = payload.data.mixer.channels;
@@ -536,7 +635,7 @@
       },
 
       _tabChanged: function (tab) {
-        if (1 === tab) {
+        if (2 === tab) {
           window.setTimeout(function() {
             let inbox = this.$$('#messageInbox');
             let list = inbox.$.list;
@@ -551,7 +650,7 @@
               inbox._updateLocalStorage();
             }
           }.bind(this));
-        } else if (2 === tab) {
+        } else if (3 === tab) {
           window.setTimeout(function() {
             let questions = this.$$('#questions');
             let list = questions.$.list;
@@ -647,8 +746,16 @@
         let type = message.type === 'sms_in' ? 'inbox' : 'outbox';
         let mailBox = this.get(type);
         for (let i = mailBox.length - 1; i >= 0; --i) {
-          if (message.timestamp >= mailBox[i].timestamp && message.id !== mailBox[i].id) return -1;
+          if (message.timestamp && message.timestamp >= mailBox[i].timestamp && message.id !== mailBox[i].id) return -1;
           if (message.id === mailBox[i].id) return i;
+        }
+        return -1;
+      },
+
+      _findCallIndex: function(call) {
+        for (let i = this.callHistory.length - 1; i >= 0; --i) {
+          if (call.timestamp && call.timestamp >= this.callHistory[i].timestamp && call.id !== this.callHistory[i].id) return -1;
+          if (call.id === this.callHistory[i].id) return i;
         }
         return -1;
       },
@@ -662,6 +769,10 @@
           if (question.id === questions[i].id) return i;
         }
         return -1;
+      },
+
+      get todayMidnight() {
+        return new Date(Date.now()).setHours(0, 0, 0, 0);
       }
 
     });

@@ -157,23 +157,14 @@
                         <iron-icon icon="remove"></iron-icon>
                         <span class="button-label">Unselect all</span>
                     </paper-button>
-                    <template is="dom-if" if="[[!backendFilter]]">
-                        <paper-button
-                            on-tap   = "_dateFilter">
-                            <iron-icon icon="filter-list"></iron-icon>
-                            <span class="button-label">Filter</span>
-                        </paper-button>
-                    </template>
-                    <template is="dom-if" if="[[backendFilter]]">
-                        <paper-button
-                            on-tap  = "_clearDateFilter">
-                            <iron-icon icon="delete-sweep"></iron-icon>
-                            <span class="button-label">Clear Filter</span>
-                        </paper-button>
-                    </template>
+                    <paper-button
+                        on-tap   = "_dateFilter">
+                        <iron-icon icon="filter-list"></iron-icon>
+                        <span class="button-label">Filter</span>
+                    </paper-button>
                 </div>
                 <template is="dom-if" if="[[_toggleGridButtonVisible(narrow)]]">
-                    <paper-icon-button 
+                    <paper-icon-button
                         style  = "margin-right: 6px;"
                         on-tap = "_toggleUseGrid"
                         icon   = "[[_gridButtonIcon(gridSelected)]]">
@@ -222,11 +213,6 @@
                 isEmpty: {
                     type: Boolean,
                     value: false,
-                },
-                backendFilter: {
-                    type: Boolean,
-                    value: false,
-                    notify: true
                 }
             },
 
@@ -277,9 +263,6 @@
 
             _dateFilter: function() {
                 this.fire('date-filter');
-            },
-            _clearDateFilter: function() {
-                this.fire('clear-date-filter');
             },
             _toggleUseGrid: function() {
                 this.gridSelected = !this.gridSelected;

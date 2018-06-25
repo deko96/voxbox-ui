@@ -1,0 +1,94 @@
+<link rel="import" href="../../bower_components/paper-tags-input/paper-tags-input.html">
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../core/item-behavior.html">
+<link rel="import" href="../core/list-item.html">
+<link rel="import" href="call-item-content.html">
+
+<dom-module id="call-item">
+    <template>
+        <style>
+            list-item {
+                --list-item-grid-width: 300px;
+                --list-item-grid-height: 210px;
+                --list-item-content-height: auto;
+            }
+        </style>
+
+        <list-item select-mode="[[selectMode]]" selected="[[selected]]" grid="[[grid]]" item="[[item]]" favoritable="[[favoritable]]"
+            details="[[details]]">
+            <div slot="date">[[_parseDate(item.timestamp)]]</div>
+            <div slot="title" on-click="_handleTitleClick">[[title]]</div>
+            <div slot="content">
+                <call-item-content
+                    item    = "[[item]]"
+                    grid    = "[[grid]]"></call-item-content>
+            </div>
+            <div slot="bottom-left">
+                <template is="dom-if" if="[[_hasTags(item)]]">
+                    <paper-tags-input tags="[[item.tags]]" enable-add="[[tagsConfig.enableAdd]]" enable-remove="[[tagsConfig.enableRemove]]"
+                        size="[[tagsConfig.size]]">
+                    </paper-tags-input>
+                </template>
+            </div>
+        </list-item>
+    </template>
+    <script>
+        Polymer({
+            is: 'call-item',
+
+            properties: {
+                tagsConfig: {
+                    type: Object,
+                    value: {
+                        enableAdd: false,
+                        enableRemove: false,
+                        size: 'small'
+                    }
+                },
+                details: {
+                    type: Boolean,
+                    value: true
+                },
+                title: {
+                    type: String,
+                    computed: '_computedTitle(forceNumber, item)',
+                    notify: true
+                },
+                forceNumber: {
+                    type: Boolean,
+                    value: false
+                },
+            },
+
+            behaviors: [
+                ItemBehavior
+            ],
+
+            _parseDate: function (timestamp) {
+                return this._formatDate(timestamp);
+            },
+
+            _hasTags: function (call) {
+                return call.tags && call.tags.length;
+            },
+
+            _handleTitleClick: function() {
+                this.forceNumber = !this.forceNumber;
+            },
+
+            _computedTitle: function(forceNumber, item) {
+                if (!item) return null;
+                if (item.name) {
+                    if (forceNumber) {
+                        return item.number;
+                    } else {
+                        return item.name;
+                    }
+                } else {
+                    return item.number;
+                }
+            }
+
+        });
+    </script>
+</dom-module>

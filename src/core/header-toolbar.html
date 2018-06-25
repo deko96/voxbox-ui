@@ -1,0 +1,46 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<dom-module id="header-toolbar">
+    <template>
+        <style>
+            :host {
+                position: absolute;
+                width: 100%;
+                background: var(--toolbar-background, white);
+                color: var(--toolbar-color, black);
+                font-size: var(--toolbar-font-size, 18px);
+                padding: 15px;
+                box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                -webkit-box-sizing: border-box;
+                z-index: 1000;
+                box-shadow: 1px 0px 1px #000;
+                top: 0;
+            }
+            .container {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+            }
+            .container .actions {
+                display: inline-flex;
+            }
+
+            .actions ::slotted(*) {
+                padding-right: 5px;
+            }
+        </style>
+        <div class="container">
+            <div class="title">
+                <slot name="title"></slot>
+            </div>
+            <div class="actions">
+                <slot name="actions"></slot>
+            </div>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'header-toolbar'
+        });
+    </script>
+</dom-module>

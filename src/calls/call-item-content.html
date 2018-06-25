@@ -1,0 +1,89 @@
+<link rel="import" href="../../bower_components/paper-audio-player/paper-audio-player.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="call-item-content">
+    <template>
+        <style>
+            paper-audio-player {
+                --paper-audio-player-height: 40px;
+            }
+
+            paper-item {
+                padding: 0;
+                margin-bottom: 4px;
+                --paper-item-min-height: 40px;
+            }
+
+            paper-item > paper-item-body > .playerControls,
+            paper-item > paper-item-body > .playerControls > * {
+                display: flex;
+                flex: 1;
+            }
+
+            paper-button {
+                display: inline-flex;
+                flex: 1;
+                justify-content: center;
+            }
+
+            .playerControls paper-button > iron-icon {
+                margin-right: 5px;
+            }
+
+            a,
+            a:visited,
+            a:active {
+                color: inherit;
+                text-decoration: none;
+            }
+        </style>
+        <paper-item>
+            <paper-item-body two-line>
+                <paper-audio-player src="[[_getAudioURL(item.filename)]]" title="[[item.filename]]" preload="none"></paper-audio-player>
+                <div class="playerControls" secondary>
+                    <a href="[[_downloadAudio(item.filename)]]" target="_blank">
+                        <paper-button>
+                            <iron-icon icon="icons:file-download"></iron-icon>
+                            Download
+                        </paper-button>
+                    </a>
+                    <paper-button on-tap="play">
+                        <iron-icon icon="av:airplay"></iron-icon>
+                        Play on Air
+                    </paper-button>
+                </div>
+            </paper-item-body>
+        </paper-item>
+    </template>
+    <script>
+        Polymer({
+            is: 'call-item-content',
+            properties: {
+                item: {
+                    type: Object,
+                    value: {}
+                }
+            },
+
+            _getAudioURL: function (filename) {
+                let url = new URL(window.location);
+                let protocol = url.protocol + '//';
+                return protocol + [url.host, 'monitor', filename].join('/');
+            },
+
+            _downloadAudio: function (filename) {
+                return this._getAudioURL(filename) + '?download';
+            },
+
+            play: function() {
+                this.fire('play', {
+                    id: this.item.id,
+                    start: 0
+                });
+            }
+        });
+    </script>
+</dom-module>

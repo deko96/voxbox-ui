@@ -1,0 +1,297 @@
+<link rel="import" href="../../bower_components/array-filter/array-filter.html">
+<link rel="import" href="../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../core/confirm-delete-dialog.html">
+<link rel="import" href="../core/list-behavior.html">
+<link rel="import" href="../core/list-styles.html">
+<link rel="import" herf="../core/datepicker-dialog.html">
+<link rel="import" href="../core/header-toolbar.html">
+<link rel="import" href="call-details-dialog.html">
+<link rel="import" href="call-item.html">
+
+<dom-module id="call-list">
+    <template>
+        <style include="list-styles"></style>
+        <style>
+            :host {
+                position: relative;
+            }
+            paper-fab {
+                position: fixed;
+                right: 30px;
+                bottom: 74px;
+                --paper-fab-background: rgb(0, 188, 212);
+                z-index: 2;
+            }
+            iron-list {
+                --iron-list-items-container: {
+                margin-top: 57px;
+                };
+            }
+        </style>
+
+        <confirm-delete-dialog id="confirm-delete-dialog" on-delete-confirmed="onDeleteConfirmed" selection-size="[[selectionSize]]">
+        </confirm-delete-dialog>
+
+        <!-- Question Details Dialog -->
+        <call-details-dialog id="details" channels="[[channels]]" on-message="_forwardMessage" on-play="onPlay" on-delete-item="onDeleteConfirmed"
+            on-next="showNextMessage" on-prev="showPreviousMessage" on-sms-out="_handleSMSOut">
+        </call-details-dialog>
+        <!-- / Question Details Dialog -->
+
+        <!-- Datepicker Dialog -->
+        <datepicker-dialog id="datepicker-dialog" on-date-selected="onDateSelected"></datepicker-dialog>
+        <!-- / Datepicker Dialog -->
+
+        <!-- Messages Filter -->
+        <array-filter id="array-filter" items="{{items}}" filtered="{{filtered}}" observe="favorite" filter="_filter">
+        </array-filter>
+        <!-- / Messages Filter -->
+
+        <!-- No Messages Block -->
+        <template is="dom-if" if="[[isEmpty]]">
+            <div
+                class                   = "no-items">
+                <paper-material>
+                <template is="dom-if" if="[[loading]]">
+                    <paper-spinner-lite active></paper-spinner-lite>
+                </template>
+                <template is="dom-if" if="[[!loading]]">
+                    There are no calls here.
+                </template>
+                </paper-material>
+            </div>
+        </template>
+        <!-- / No Messages Block -->
+
+        <header-toolbar>
+            <div slot="title">Call History ([[filterDate]])</div>
+        </header-toolbar>
+
+        <!-- Message Controls Action Bar -->
+        <list-controls id="controls" is-empty="[[isEmpty]]" on-iron-resize="onResize" on-select-all="onSelectAll" on-unselect-all="onUnselectAll"
+            on-delete-selection="onDeleteSelection" on-star-selection="onStarSelection" on-unstar-selection="onUnstarSelection"
+            on-unstar-all="onUnstarAll" on-toggle-grid="onToggleGrid" on-date-filter="onDateFilter"
+            filter-starred="{{filterStarred}}" has-selection="[[hasSelection]]" selection-size="[[selectionSize]]" grid-selected="[[gridSelected]]"
+            grid-mode="{{gridMode}}" favorite-options="[[favoritable]]">
+        </list-controls>
+        <!-- / Message Controls Action Bar -->
+
+        <!-- Questions List -->
+        <iron-list id="list" as="item" selected-items="{{selection}}" on-scroll="onScroll" items="[[filtered]]" max-physical-count="1000"
+            grid$="[[gridMode]]" multi-selection>
+            <template>
+                <call-item on-tap="onTap" on-play="onPlay" on-selected-toggled="onSelectedToggled" on-favorite-toggled="onFavoriteToggled" on-show-details="onShowDetails"
+                    select-mode="[[hasSelection]]" selected="[[selected]]" favorite="[[item.favorite]]" grid="[[gridMode]]" item="[[item]]"
+                    favoritable="[[favoritable]]">
+                </call-item>
+            </template>
+        </iron-list>
+        <!-- Questions List -->
+    </template>
+    <script>
+        Polymer({
+            is: 'call-list',
+            behaviors: [
+                ListBehavior
+            ],
+            observers: [
+                '_filterStarredChanged(filterStarred)',
+                '_updateIsEmpty(filtered, filtered.*)'
+            ],
+            properties: {
+                filterDate: {
+                    type: String,
+                    value: null
+                },
+                selection: Array,
+                filtered: {
+                    type: Array,
+                    value: [],
+                },
+                filterStarred: {
+                    type: Boolean,
+                    value: false,
+                    notify: true
+                },
+                isEmpty: {
+                    type: Boolean,
+                    value: false,
+                },
+                scrollIndex: {
+                    type: Number,
+                    value: 0,
+                },
+                atEnd: {
+                    type: Boolean,
+                    value: false,
+                },
+                favoritable: {
+                    type: Boolean,
+                    value: true
+                },
+                gridMode: {
+                    type: Boolean
+                },
+                gridSelected: {
+                    type: Boolean,
+                    value: true
+                },
+                debug: {
+                    type: Boolean,
+                    value: false,
+                }
+            },
+            ready: function() {
+                let datepicker = this.$['datepicker-dialog'];
+                if (datepicker) {
+                    datepicker._setRange(0);
+                    datepicker.filter();
+                }
+            },
+            onTap: function (e) {
+                let target = e.__target || e.target;
+                if (e.path) {
+                    target = e.path[0];
+                }
+                if (!this.hasSelection) return;
+                if (['PAPER-CHECKBOX', 'IRON-ICON'].includes(target.tagName)) return;
+                if (target.tagName === 'DIV' && target.id === 'checkboxContainer') return;
+
+                const list = this.$.list;
+                if (e.model.selected)
+                    list.deselectIndex(e.model.index);
+                else
+                    list.selectIndex(e.model.index);
+            },
+            onPlay: function (e, data) {
+                this.fire('message', {
+                    event: 'calls:play',
+                    data: data
+                });
+            },
+            onSelectedToggled: function (e) {
+                const list = this.$.list;
+                if (e.model.selected) {
+                    list.deselectIndex(e.model.index);
+                } else {
+                    list.selectIndex(e.model.index);
+                }
+            },
+            onFavoriteToggled: function (e) {
+                var value = !e.model.item.favorite;
+                this.set('filtered.' + e.model.index + '.favorite', value);
+                this.fire('message', {
+                    event: (value ? 'calls:favorite' : 'calls:unfavorite'),
+                    data: [e.model.item.id],
+                });
+            },
+            onDateSelected: function(event, data) {
+                let datepicker = this.$['datepicker-dialog'];
+                this.filterDate = datepicker.chosenRange(datepicker.from, datepicker.to);
+                this.loading = true;
+                this.fire('message', {
+                    event: 'calls:fetch',
+                    data: {
+                        from: data.from,
+                        to: data.to
+                    }
+                });
+            },
+            onScroll: function () {
+                this._updateScrollIndex();
+                var last = this.$.list.lastVisibleIndex;
+                if (last > this.freshold) {
+                    this.freshold = last;
+                }
+                if (this._scrollTimeout) {
+                    window.clearTimeout(this._scrollTimeout);
+                }
+                this._scrollTimeout = window.setTimeout(function () {
+                    // this._updateLocalStorage();
+                }.bind(this), 100);
+            },
+            _scrollToLast: function () {
+                this.$.list.scrollToIndex(this.filtered.length - 1);
+                this.freshold = this.filtered.length;
+                // this._updateLocalStorage();
+            },
+            _filter: function (item) {
+                if (this.filterStarred) {
+                    return !!item.favorite;
+                }
+                return true;
+            },
+            _filterStarredChanged: function (filterStarred) {
+                if (!filterStarred) {
+                    this.items = JSON.parse(JSON.stringify(this.items));
+                }
+                this.$['array-filter'].update();
+                this.$.list.clearSelection();
+                this.selection = [];
+
+                var index = this.scrollIndex;
+                if (!filterStarred) {
+                    // There must be a cleaner way to do this!
+                    window.setTimeout(function () {
+                        this.$.list.scrollToIndex(index);
+                        this._updateScrollIndex();
+                    }.bind(this), 2);
+                }
+            },
+            _updateIsEmpty: function (filtered) {
+                var nothing = !filtered.length;
+                if (this.isEmpty != nothing) {
+                    this.isEmpty = nothing;
+                }
+            },
+            _updateScrollIndex: function () {
+                if (this.filterStarred) {
+                    this.atEnd = true;
+                } else {
+                    var list = this.$.list;
+                    this.scrollIndex = list.firstVisibleIndex;
+                    this.atEnd = this.isEmpty ?
+                        true :
+                        list.lastVisibleIndex >= Math.max(0, this.filtered.length - 3);
+                }
+            },
+            onShowDetails: function (e) {
+                var details = this.$.details;
+                Polymer.dom(document.querySelector('body')).appendChild(details);
+                this._updateDialog(details, e.model.item, e.model.index);
+                details.open();
+            },
+
+            onStarSelection: function (e) {
+                let ids = [];
+                this.selection.forEach(item => ids.push(item.id));
+                this.fire('message', {
+                    event: 'calls:favorite',
+                    data: ids
+                });
+            },
+
+            onUnstarSelection: function (e) {
+                let ids = [];
+                this.selection.forEach(item => ids.push(item.id));
+                this.fire('message', {
+                    event: 'calls:unfavorite',
+                    data: ids
+                });
+            },
+
+            onDeleteConfirmed: function (e) {
+                let ids = [];
+                this.selection.forEach(item => ids.push(item.id));
+                this.fire('message', {
+                    event: 'calls:delete',
+                    data: ids
+                });
+            },
+        });
+    </script>
+</dom-module>

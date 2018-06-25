@@ -3,10 +3,13 @@
 <link rel="import" href="../../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner-lite.html">
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../core/confirm-delete-dialog.html">
 <link rel="import" href="../core/list-behavior.html">
 <link rel="import" href="../core/list-styles.html">
+<link rel="import" herf="../core/datepicker-dialog.html">
+<link rel="import" href="../core/header-toolbar.html">
 <link rel="import" href="question-details-dialog.html">
 <link rel="import" href="question-item.html">
 
@@ -14,12 +17,20 @@
     <template>
         <style include="list-styles"></style>
         <style>
+            :host {
+                position: relative;
+            }
             paper-fab {
                 position: fixed;
                 right: 30px;
                 bottom: 74px;
-                --paper-fab-background: rgb(0, 188, 212); 
+                --paper-fab-background: rgb(0, 188, 212);
                 z-index: 2;
+            }
+            iron-list {
+                --iron-list-items-container: {
+                margin-top: 57px;
+                };
             }
         </style>
 
@@ -32,33 +43,45 @@
         </question-details-dialog>
         <!-- / Question Details Dialog -->
 
+        <!-- Datepicker Dialog -->
+        <datepicker-dialog id="datepicker-dialog" on-date-selected="onDateSelected"></datepicker-dialog>
+        <!-- / Datepicker Dialog -->
+
         <!-- Messages Filter -->
         <array-filter id="array-filter" items="{{items}}" filtered="{{filtered}}" observe="favorite" filter="_filter">
         </array-filter>
         <!-- / Messages Filter -->
-
         <!-- No Messages Block -->
         <template is="dom-if" if="[[isEmpty]]">
-            <div class="no-items">
-                <paper-material>
-                    There are no questions here.
-                </paper-material>
-            </div>
-        </template>
-        <!-- / No Messages Block -->
+        <div
+          class                   = "no-items">
+          <paper-material>
+            <template is="dom-if" if="[[loading]]">
+              <paper-spinner-lite active></paper-spinner-lite>
+            </template>
+            <template is="dom-if" if="[[!loading]]">
+              There are no questions here.
+            </template>
+          </paper-material>
+        </div>
+      </template>
+      <!-- / No Messages Block -->
+
+        <header-toolbar>
+            <div slot="title">Questions ([[filterDate]])</div>
+        </header-toolbar>
 
         <!-- Message Controls Action Bar -->
         <list-controls id="controls" is-empty="[[isEmpty]]" on-iron-resize="onResize" on-select-all="onSelectAll" on-unselect-all="onUnselectAll"
             on-delete-selection="onDeleteSelection" on-star-selection="onStarSelection" on-unstar-selection="onUnstarSelection"
-            on-unstar-all="onUnstarAll" on-toggle-grid="onToggleGrid" filter-starred="{{filterStarred}}" has-selection="[[hasSelection]]"
-            selection-size="[[selectionSize]]" grid-selected="[[gridSelected]]" grid-mode="{{gridMode}}" favorite-options="[[favoritable]]">
+            on-unstar-all="onUnstarAll" on-toggle-grid="onToggleGrid" on-date-filter="onDateFilter"
+            filter-starred="{{filterStarred}}" has-selection="[[hasSelection]]" selection-size="[[selectionSize]]" grid-selected="[[gridSelected]]"
+            grid-mode="{{gridMode}}" favorite-options="[[favoritable]]">
         </list-controls>
         <!-- / Message Controls Action Bar -->
 
         <!-- Refresh Button -->
-        <paper-fab
-            icon                    = "refresh"
-            on-tap                  = "_refreshQuestions">
+        <paper-fab icon="refresh" on-tap="_refreshQuestions">
         </paper-fab>
         <!-- / Refresh Button -->
 
@@ -85,6 +108,10 @@
                 '_updateIsEmpty(filtered, filtered.*)'
             ],
             properties: {
+                filterDate: {
+                    type: String,
+                    value: null
+                },
                 selection: Array,
                 freshold: {
                     type: Number,
@@ -137,6 +164,11 @@
                 if (freshold) {
                     this.freshold = Number(freshold);
                 }
+                let datepicker = this.$['datepicker-dialog'];
+                if (datepicker) {
+                    datepicker._setRange(0);
+                    datepicker.filter();
+                }
             },
             onTap: function (e) {
                 let target = e.__target || e.target;
@@ -165,11 +197,23 @@
                 var value = !e.model.item.favorite;
                 this.set('filtered.' + e.model.index + '.favorite', value);
                 this.fire('message', {
-                    event: (value ? 'questionFavorite' : 'questionUnfavorite'),
+                    event: (value ? 'questions:favorite' : 'questions:unfavorite'),
                     data: [e.model.item.id],
                 });
             },
-            onScroll: function() {
+            onDateSelected: function(event, data) {
+                let datepicker = this.$['datepicker-dialog'];
+                this.filterDate = datepicker.chosenRange(datepicker.from, datepicker.to);
+                this.loading = true;
+                this.fire('message', {
+                    event: 'questions:fetch',
+                    data: {
+                        from: data.from,
+                        to: data.to
+                    }
+                });
+            },
+            onScroll: function () {
                 this._updateScrollIndex();
                 var last = this.$.list.lastVisibleIndex;
                 if (last > this.freshold) {
@@ -178,11 +222,11 @@
                 if (this._scrollTimeout) {
                     window.clearTimeout(this._scrollTimeout);
                 }
-                this._scrollTimeout = window.setTimeout(function() {
+                this._scrollTimeout = window.setTimeout(function () {
                     this._updateLocalStorage();
                 }.bind(this), 100);
             },
-            _scrollToLast: function() {
+            _scrollToLast: function () {
                 this.$.list.scrollToIndex(this.filtered.length - 1);
                 this.freshold = this.filtered.length;
                 this._updateLocalStorage();
@@ -238,7 +282,7 @@
                 let ids = [];
                 this.selection.forEach(item => ids.push(item.id));
                 this.fire('message', {
-                    event: 'questionFavorite',
+                    event: 'questions:favorite',
                     data: ids
                 });
             },
@@ -247,7 +291,7 @@
                 let ids = [];
                 this.selection.forEach(item => ids.push(item.id));
                 this.fire('message', {
-                    event: 'questionUnfavorite',
+                    event: 'questions:unfavorite',
                     data: ids
                 });
             },
@@ -256,7 +300,7 @@
                 let ids = [];
                 this.selection.forEach(item => ids.push(item.id));
                 this.fire('message', {
-                    event: 'questionDelete',
+                    event: 'questions:delete',
                     data: ids
                 });
                 if (ids.length) {
@@ -265,22 +309,22 @@
                 }
             },
 
-            _refreshQuestions: function(e) {
+            _refreshQuestions: function (e) {
+                let datepicker = this.$['datepicker-dialog'];
                 this.fire('message', {
-                    event: 'questionsFetch',
+                    event: 'questions:fetch',
                     data: {
-                        filter: [],
-                        after_id: null,
-                        count: 1000
+                        from: datepicker.from,
+                        to: datepicker.to
                     }
                 });
             },
 
-            _unreadCount: function(filtered, freshold, items) {
+            _unreadCount: function (filtered, freshold, items) {
                 return Math.max(0, items.length - this.freshold);
             },
 
-            _updateLocalStorage: function() {
+            _updateLocalStorage: function () {
                 localStorage.setItem('__voxbox__fresh-qa', this.freshold);
             }
         });

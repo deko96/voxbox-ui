@@ -26,7 +26,7 @@
                 type: Boolean,
                 value: false
             },
-            backendFilter: {
+            loading: {
                 type: Boolean,
                 value: false,
                 notify: true
@@ -85,7 +85,7 @@
             data[message.id] = null;
             this.splice('items', index, 1);
             this.fire('message', {
-                event: 'messageDelete',
+                event: 'message:delete',
                 data: data,
             });
         },
@@ -98,7 +98,7 @@
                 this.splice('items', index, 1);
             }, this);
             this.fire('message', {
-                event: 'messageDelete',
+                event: 'message:delete',
                 data: data,
             });
         },
