@@ -42,7 +42,7 @@
         </style>
         <paper-item>
             <paper-item-body two-line>
-                <paper-audio-player src="[[_getAudioURL(item.filename)]]" title="[[item.filename]]" preload="none"></paper-audio-player>
+                <paper-audio-player id="player" src$="[[_getAudioURL(item.filename)]]" title="[[item.filename]]" ></paper-audio-player>
                 <div class="playerControls" secondary>
                     <a href="[[_downloadAudio(item.filename)]]" target="_blank">
                         <paper-button>
@@ -63,12 +63,16 @@
             is: 'call-item-content',
             properties: {
                 item: {
-                    type: Object,
-                    value: {}
+                    type: Object
                 }
             },
 
+            restartAudioPlayer: function() {
+                if (this.$.player) this.$.player.restart();
+            },
+
             _getAudioURL: function (filename) {
+                if (!filename) return null;
                 let url = new URL(window.location);
                 let protocol = url.protocol + '//';
                 return protocol + [url.host, 'monitor', filename].join('/');

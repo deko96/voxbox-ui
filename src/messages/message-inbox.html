@@ -265,7 +265,7 @@
           var value = !e.model.item.favorite;
           this.set('filtered.' + e.model.index + '.favorite', value);
           this.fire('message', {
-            event: (value ? 'message:favorite' : 'message:unfavorite'),
+            event: (value ? 'messages:favorite' : 'messages:unfavorite'),
             data: [e.model.item.id],
           });
         },
@@ -291,7 +291,7 @@
             this.$.list.clearSelection();
             if (ids.length) {
               this.fire('message', {
-                event: 'message:unfavorite',
+                event: 'messages:unfavorite',
                 data: ids,
               });
             }
@@ -304,7 +304,7 @@
           this.filterDate = datepicker.chosenRange(datepicker.from, datepicker.to);
           this.loading = true;
           this.fire('message', {
-            event: 'message:fetch',
+            event: 'messages:fetch',
             data: {
               from: data.from,
               to: data.to
@@ -357,7 +357,7 @@
             if ('favorite' === prop) {
               if (ids.length) {
                 this.fire('message', {
-                  event: (value ? 'message:favorite' : 'message:unfavorite'),
+                  event: (value ? 'messages:favorite' : 'messages:unfavorite'),
                   data: ids,
                 });
               }

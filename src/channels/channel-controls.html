@@ -90,6 +90,9 @@
       is: 'channel-controls',
 
       properties: {
+        channel: {
+          type: Object
+        },
         channelId: {
           type: Number,
         },
@@ -108,7 +111,7 @@
       },
 
       initCall: function() {
-        this.fire('show-call-dialog', this.channelId);
+        this.fire('show-call-dialog', this.channel);
       },
 
       handleMenuSelected: function(e, detail) {

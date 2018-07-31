@@ -25,6 +25,7 @@
                         <b>Time:</b> [[_formatDate(item.timestamp)]]
                     </p>
                     <call-item-content
+                        id      = "content"
                         item    = "[[item]]"></call-item-content>
             </div>
         </item-details-dialog>
@@ -72,6 +73,10 @@
 
             close: function () {
                 this.$.dialog.close();
+            },
+
+            restartAudioPlayer: function() {
+                this.$.content.restartAudioPlayer();
             },
 
             _formatDate: function (timestamp) {

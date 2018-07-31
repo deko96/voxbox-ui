@@ -33,7 +33,7 @@
                 <template is="dom-repeat" items="[[article.attachments]]" as="attachment">
                     <paper-item>
                         <paper-item-body>
-                            <paper-audio-player src="[[_getAudioURL(item.id, article.id, attachment.filename)]]" title="[[_getAudioTitle(item, article, articleIndex)]]"
+                            <paper-audio-player src$="[[_getAudioURL(item.id, article.id, attachment.filename)]]" title="[[_getAudioTitle(item, article, articleIndex)]]"
                                 color$="[[_getAudioColor(articleIndex)]]">
                             </paper-audio-player>
                         </paper-item-body>
@@ -61,6 +61,7 @@
             },
 
             _getAudioURL: function (ticketId, articleId, attachmentName) {
+                if (!ticketId || !articleId || !attachmentName) return null;
                 let url = new URL(window.location);
                 let protocol = url.protocol + '//';
                 return protocol + [url.host, 'answers', ticketId, articleId, attachmentName].join('/');

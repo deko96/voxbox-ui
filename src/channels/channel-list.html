@@ -9,150 +9,147 @@
   <template>
     <style>
 
-      :host {
-        display: flex;
-      }
+    :host {
+      display: flex;
+    }
 
-      paper-fab#call-agents {
-        position: fixed;
-        right: 30px;
-        bottom: 100px;
-        z-index: 2;
-        --paper-fab-disabled-text: #fff;
-      }
+    paper-fab#call-agents {
+      position: fixed;
+      right: 30px;
+      bottom: 100px;
+      z-index: 2;
+      --paper-fab-disabled-text: #fff;
+    }
 
-      paper-fab#call-agents.free {
-        --paper-fab-background: #1b5e20;
-      }
+    paper-fab#call-agents.free {
+      --paper-fab-background: #1b5e20;
+    }
 
-      paper-fab#call-agents.defunct {
-        --paper-fab-background: #ffa726;
-        --paper-fab-disabled-background: #ffa726;
-      }
+    paper-fab#call-agents.defunct {
+      --paper-fab-background: #ffa726;
+      --paper-fab-disabled-background: #ffa726;
+    }
 
-      paper-fab#call-agents.busy {
-        --paper-fab-background: #e91e63;
-        --paper-fab-disabled-background: #e91e63;
-      }
+    paper-fab#call-agents.busy {
+      --paper-fab-background: #e91e63;
+      --paper-fab-disabled-background: #e91e63;
+    }
 
-      paper-fab {
-        position: fixed;
-        right: 30px;
-        bottom: 30px;
-        --paper-fab-background: rgb(0, 188, 212); 
-        z-index: 2;
-      }
+    paper-fab {
+      position: fixed;
+      right: 30px;
+      bottom: 30px;
+      --paper-fab-background: rgb(0, 188, 212); 
+      z-index: 2;
+    }
 
-      .channel-container {
-        width: 100%;
-        display: flex; 
-        flex-flow: wrap row; 
-        overflow: auto;
-        margin: 50px;
-      }
+    .channel-container {
+      width: 100%;
+      display: flex; 
+      flex-flow: wrap row; 
+      overflow: auto;
+      margin: 50px;
+    }
 
-    </style>
-    <call-dialog
-      id                       = "call-dialog"
-      on-confirmed             = "handleCall"
-      lines                    = "[[activeLines]]"
-      line                     = "[[forceLine]]">
-    </call-dialog>
-    <message-compose-dialog
-      id                       = "message-compose-dialog"
-      on-confirmed             = "handleSendMessage"
-      channels                 = "[[activeChannels]]">
-    </message-compose-dialog>
-    <div class                 = "channel-container">
-      <template                
-        is                     = "dom-repeat" 
-        items                  = "[[channels]]" 
-        as                     = "channel">
-        <channel-item 
-          diff                 = "[[diff]]"
-          channel-id           = "[[channel.id]]"
-          mode                 = "[[channel.mode]]"
-          direction            = "[[channel.direction]]"
-          timestamp            = "[[channel.timestamp]]"
-          phone-number         = "[[channel.number]]"
-          label                = "[[channel.label]]"
-          type                 = "[[channel.type]]"
-          muted                = "{{channel.muted}}"
-          level                = "{{channel.level}}"
-          provider             = "[[computedProvider(channel, channel.*)]]"
-          network-mode         = "[[computedNetworkMode(channel, channel.*)]]"
-          signal-strength-icon = "[[computedSignalStrengthIcon(channel, channel.*)]]"
-          contact-primary      = "[[computedContactPrimary(channel, channel.*)]]"
-          contact-secondary    = "[[computedContactSecondary(channel, channel.*)]]"
-          has-contact-name     = "[[hasContactName(channel, channel.*)]]"
-          on-show-call-dialog  = "openCallDialog"
-          on-call-number       = "onCallNumber"
-          on-send-sms          = "onSendMessage">
-        </channel-item>
-      </template>
-    </div>
-    <paper-fab
-      on-tap                   = "openCallDialogForAgents"
-      id                       = "call-agents"
-      class$                   = "[[agentsLineStatus]]"
-      disabled$                = "[[!canCallAgents]]"
-      icon                     = "hardware:headset-mic">
-    </paper-fab>
-    <paper-fab 
-       on-tap                  = "openCallDialog" 
-       icon                    = "communication:dialpad">
-    </paper-fab>
-  </template>
-  <script>
+  </style>
+  <call-dialog
+  id                       = "call-dialog"
+  on-confirmed             = "handleCall"
+  lines                    = "[[activeLines]]">
+</call-dialog>
+<message-compose-dialog
+id                       = "message-compose-dialog"
+on-confirmed             = "handleSendMessage"
+channels                 = "[[activeChannels]]">
+</message-compose-dialog>
+<div class                 = "channel-container">
+  <template                
+  is                     = "dom-repeat" 
+  items                  = "[[channels]]" 
+  as                     = "channel">
+  <channel-item 
+  diff                 = "[[diff]]"
+  channel              = "[[channel]]"
+  channel-id           = "[[channel.id]]"
+  mode                 = "[[channel.mode]]"
+  direction            = "[[channel.direction]]"
+  timestamp            = "[[channel.timestamp]]"
+  phone-number         = "[[channel.number]]"
+  label                = "[[channel.label]]"
+  type                 = "[[channel.type]]"
+  muted                = "{{channel.muted}}"
+  level                = "{{channel.level}}"
+  provider             = "[[computedProvider(channel, channel.*)]]"
+  network-mode         = "[[computedNetworkMode(channel, channel.*)]]"
+  signal-strength-icon = "[[computedSignalStrengthIcon(channel, channel.*)]]"
+  contact-primary      = "[[computedContactPrimary(channel, channel.*)]]"
+  contact-secondary    = "[[computedContactSecondary(channel, channel.*)]]"
+  has-contact-name     = "[[hasContactName(channel, channel.*)]]"
+  on-show-call-dialog  = "openCallDialog"
+  on-call-number       = "onCallNumber"
+  on-send-sms          = "onSendMessage">
+</channel-item>
+</template>
+</div>
+<paper-fab
+on-tap                   = "openCallDialogForAgents"
+id                       = "call-agents"
+class$                   = "[[agentsLineStatus]]"
+disabled$                = "[[!canCallAgents]]"
+icon                     = "hardware:headset-mic">
+</paper-fab>
+<paper-fab 
+on-tap                  = "openCallDialog" 
+icon                    = "communication:dialpad">
+</paper-fab>
+</template>
+<script>
 
-    Polymer({
+  Polymer({
 
-      is: 'channel-list',
+    is: 'channel-list',
 
-      properties: {
-        channels: {
-          type: Array,
-          value: [],
-        },
-        activeChannels: {
-          type: Array,
-          computed: 'computedActiveChannels(channels, channels.*)',
-        },
-        lines: {
-          type: Array,
-          value: []
-        },
-        activeLines: {
-          type: Array,
-          computed: 'computedActiveLines(lines, lines.*)'
-        },
-        forceLine: {
-          type: String,
-          value: null
-        },
-        agentsLineStatus: {
-          type: String,
-          computed: 'computedAgentsLineStatus(lines, lines.*)',
-          notify: true
-        },
-        canCallAgents: {
-          type: Boolean,
-          computed: 'computedCanCallAgents(lines, lines.*)',
-          notify: true
-        }
+    properties: {
+      channels: {
+        type: Array,
+        value: [],
       },
+      activeChannels: {
+        type: Array,
+        computed: 'computedActiveChannels(channels, channels.*)',
+      },
+      lines: {
+        type: Array,
+        value: []
+      },
+      activeLines: {
+        type: Array,
+        computed: 'computedActiveLines(lines, lines.*)'
+      },
+      agentsLineStatus: {
+        type: String,
+        computed: 'computedAgentsLineStatus(lines, lines.*)',
+        notify: true
+      },
+      canCallAgents: {
+        type: Boolean,
+        computed: 'computedCanCallAgents(lines, lines.*)',
+        notify: true
+      }
+    },
 
-      behaviors: [
-        Polymer.AppNetworkStatusBehavior,
-      ],
+    behaviors: [
+    Polymer.AppNetworkStatusBehavior,
+    ],
 
-      onCallNumber: function(e) {
-        var dialog = this.$['call-dialog'];
-        Polymer.dom(document.querySelector('body')).appendChild(dialog);
-        var channel = e.detail;
-        if (channel) {
-          dialog.setLine(channel.id.split(':')[0]);
-          dialog.setAgent(channel.number);
+    onCallNumber: function(e) {
+      var dialog = this.$['call-dialog'];
+      Polymer.dom(document.querySelector('body')).appendChild(dialog);
+      var channel = e.detail;
+      console.log('onCallNumber', channel);
+      if (channel) {
+        dialog.setLine(channel);
+          // dialog.setAgent(channel.number);
         }
         dialog.open();
       },
@@ -181,9 +178,9 @@
           var mode = channel.connection.mode;
           switch (mode) {
             case 'GSM/GPRS':
-              return '2G';
+            return '2G';
             default:
-              return mode;
+            return mode;
           }
         }
         return '';
@@ -209,7 +206,7 @@
 
       computedActiveLines: function(lines) {
         return lines.filter(function(line) {
-          return line.status === 'free';
+          return !line.status || (line.status && line.status === 'free');
         }.bind(this));
       },
 
@@ -245,10 +242,13 @@
           && contact.name !== channel.id);
       },
 
-      openCallDialog: function(e) {
+      openCallDialog: function(e, line) {
         var dialog = this.$['call-dialog'];
-        dialog.setAgent('');
-        dialog.setLine('__auto__');
+        if (line && line.id) {
+          dialog.setLine(line);
+        } else {
+          dialog.setLine({ id: '__auto__' });
+        }
         Polymer.dom(document.querySelector('body')).appendChild(dialog);
         dialog.open();
         if (e && e.detail && 'object' !== typeof(e.detail)) {
@@ -258,8 +258,7 @@
 
       openCallDialogForAgents: function(e) {
         var dialog = this.$['call-dialog'];
-        // dialog.setAgent('');
-        dialog.setLine(this.getAgentsLine());
+        dialog.setLine({ id: this.getAgentsLine() });
         Polymer.dom(document.querySelector('body')).appendChild(dialog);
         dialog.open();
         if (e && e.detail && 'object' !== typeof(e.detail)) {
@@ -283,7 +282,7 @@
           data: payload,
         });
       },
- 
+
       handleCall: function() {
         var dialog = this.$['call-dialog'];
         this.fire('message', {
@@ -292,7 +291,7 @@
             number: dialog.number,
             waitAnswer: dialog.waitAnswer,
             mode: 'master',
-            line_id: ('__auto__' === dialog.line ? null : dialog.line),
+            line_id: ('__auto__' === dialog.line.id ? null : dialog.line.id),
           },
         });
         var toast = document.createElement('paper-toast');

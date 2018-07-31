@@ -279,6 +279,7 @@
           </template>
           <channel-controls
             id                   = "controls"
+            channel              = "[[channel]]"
             channel-id           = "[[channelId]]"
             mode                 = "[[mode]]"
             type                 = "[[type]]"
@@ -299,6 +300,9 @@
       is: 'channel-item',
 
       properties: {
+        channel: {
+          type: Object
+        },
         channelId: {
           type: Number,
         },
