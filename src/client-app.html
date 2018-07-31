@@ -186,12 +186,14 @@
                 </label>
               </div>
             </paper-tab>
+		<template is="dom-if" if="[[wazoConfig]]">
 			<paper-tab>
 				<div class="layout vertical center">
 					<iron-icon icon="icons:perm-phone-msg"></iron-icon>
 					<label>Unicom</label>
 				</div>
 			</paper-tab>
+		</template>
           </paper-tabs>
         </app-header>
         <iron-pages selected="[[tab]]">
@@ -214,8 +216,9 @@
           </message-outbox> -->
           <questions-list id="questions" on-message="sendMessage" unread="{{unreadQuestions}}" items$="[[questions]]" lines="[[activeLines]]" debug="[[debug]]" loading="{{questionsLoading}}">
           </questions-list>
-
+		  <template is="dom-if" if="[[wazoConfig]]">
 		      <unicom-ui config="[[wazoConfig]]"></unicom-ui>
+		  </template>
         </iron-pages>
       </app-header-layout>
     </template>
@@ -550,7 +553,7 @@
               console.log('Server time : ' + payload.data.server_time);
               console.log('Diff        : ' + this.diff);
             }
-            this.wazoConfig = payload.data.wazoConfig;
+            this.wazoConfig = payload.data.wazoConfig ? payload.data.wazoConfig : null;
             window.setTimeout(function () {
               this.hasInitialized = true;
             }.bind(this), 1000);

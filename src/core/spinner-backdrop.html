@@ -91,11 +91,12 @@ Custom property | Description | Default
 
     </style>
 
-    <div class="overlay" hidden$="[[!active]]">
-      <slot></slot>
-      <paper-spinner alt="[[alt]]" active="[[loading]]" class="green"></paper-spinner>
-    </div>
-
+	<template is="dom-if" if="[[active]]">
+		<div class="overlay">
+			<slot></slot>
+		<paper-spinner alt="[[alt]]" active="[[loading]]" class="green"></paper-spinner>
+		</div>
+	</template>
   </template>
 
   <script>

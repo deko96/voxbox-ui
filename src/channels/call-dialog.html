@@ -46,9 +46,6 @@
       display: inline-flex;
       align-self: center;
     }
-    *[hidden] {
-      display: none;
-    }
   </style>
   <paper-dialog modal id="dialog" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="onClosed">
     <h2>Make a call</h2>
@@ -65,32 +62,34 @@
       </paper-radio-group>
     </div>
     <!-- Regular Input for Calling numbers -->
-    <!-- <template is="dom-if" if="[[!callAgent]]" restamp> -->
+    <template is="dom-if" if="[[!showAgents]]">
       <paper-input
       required
       auto-validate
       id="number-input"
       label="Number"
       value="{{number}}"
-      error-message="This field is required."
-      hidden$="[[showAgents]]">
+      error-message="This field is required.">
     </paper-input>
-    <!-- </template> -->
+    </template>
     <!-- / Regular Input for Calling numbers -->
 
     <!-- Dropdown Input for Calling agents -->
-    <paper-dropdown-menu label="Agents" class="agents-dropdown" horizontal-align="left" vertical-align="top" hidden$="[[!showAgents]]">
-      <paper-listbox slot="dropdown-content" selected="{{selectedAgent}}" on-iron-select="handleAgentChange" class="dropdown-content">
-        <template is="dom-repeat" items="[[line.agents]]">
-          <paper-item label="[[getAgentFullName(item)]]" value="[[item.phone]]">
-            <paper-item-body two-line>
-              <div>[[getAgentFullName(item)]]</div>
-              <div secondary>[[item.phone]]</div>
-            </paper-item-body>
-          </paper-item>
-        </template>
-      </paper-listbox>
-    </paper-dropdown-menu>
+    <template is="dom-if" if="[[showAgents]]">
+		<paper-dropdown-menu label="Agents" class="agents-dropdown" horizontal-align="left" vertical-align="top">
+			<paper-listbox slot="dropdown-content" selected="{{selectedAgent}}" on-iron-select="handleAgentChange" class="dropdown-content">
+				<template is="dom-repeat" items="[[line.agents]]">
+					<paper-item label="[[getAgentFullName(item)]]" value="[[item.phone]]">
+						<paper-item-body two-line>
+							<div>[[getAgentFullName(item)]]</div>
+							<div secondary>[[item.phone]]</div>
+						</paper-item-body>
+					</paper-item>
+				</template>
+			</paper-listbox>
+		</paper-dropdown-menu>
+	</template>
+
     <!-- / Dropdown Input for Calling agents -->
     <div class="dialog-footer">
       <div class="left">
@@ -153,7 +152,8 @@
     reset: function () {
         // this.number  = '';
         // this.line = '__auto__';
-        this.$['number-input'].invalid = false;
+        //this.$['number-input'].invalid = false;
+		this.$$('#number-input').invalid = false;
       },
 
       onClosed: function (event) {
@@ -163,7 +163,6 @@
       },
       setLine: function(line) {
         if (line.number) {
-          console.log('line set.', this.number);
           this.number = line.number;
         }
         let L = this.lines.find(L => {
@@ -198,7 +197,6 @@
       handleLineChanged: function () {
         if (this.line) {
 
-          console.log('line changed.');
           if (this.line.id === '__auto__') this.line.type = 'dongle';
           switch(this.line.type) {
             case 'dongle':
@@ -217,7 +215,7 @@
           }
 
         }
-        this.$['number-input'].invalid = false;
+        this.reset();
       },
 
       handleAgentChange: function (event, agent) {

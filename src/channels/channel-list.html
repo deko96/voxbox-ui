@@ -146,7 +146,6 @@ icon                    = "communication:dialpad">
       var dialog = this.$['call-dialog'];
       Polymer.dom(document.querySelector('body')).appendChild(dialog);
       var channel = e.detail;
-      console.log('onCallNumber', channel);
       if (channel) {
         dialog.setLine(channel);
           // dialog.setAgent(channel.number);

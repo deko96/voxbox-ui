@@ -22,6 +22,10 @@
         display: flex;
       }
 
+	  :host *[hidden] {
+		display: none;
+	  }
+
       .channel {
         width: 260px; 
         margin: 10px;
@@ -146,15 +150,17 @@
             <div class             = "provider">
               [[provider]]
             </div>
-            <div 
-              hidden$              = "[[!networkMode]]" 
-              class                = "network-mode">
-              [[networkMode]]
-            </div>
-            <iron-icon
-              hidden$     = "[[_hideSignalStrength(type)]]"
-              icon        = "[[signalStrengthIcon]]">
-            </iron-icon>
+			<template is="dom-if" if="[[networkMode]]">
+				<div 
+					class                = "network-mode">
+					[[networkMode]]
+				</div>
+			</template>
+			<template is="dom-if" if="[[!_hideSignalStrength(type)]]">
+				<iron-icon
+					icon        = "[[signalStrengthIcon]]">
+				</iron-icon>
+			</template>
           </div>
           <div 
             class                  = "channel-description"> 

@@ -7,6 +7,9 @@
             height: 100%;
             display: flex;
         }
+		:host *[hidden] {
+			display: none;
+		}
 		iframe {
 			width: 100%;
 			height: 100%;
@@ -29,21 +32,17 @@
             background: white;
         }
 
-		*[hidden] {
-			display: none !important;
-		}
 	</style>
 
 	<iframe id="unicom" src="/unicom/voxbox.html" hidden$="[[!loaded]]"></iframe>
 
-    <div
-        class                   = "no-items"
-        hidden$					= "[[loaded]]"
-        >
-        <paper-material>
-            <paper-spinner-lite active></paper-spinner-lite>
-        </paper-material>
-    </div>
+	<template is="dom-if" if="[[!loaded]]">
+		<div class="no-items">
+			<paper-material>
+				<paper-spinner-lite active></paper-spinner-lite>
+			</paper-material>
+		</div>
+	</template>
 
 </template>
 <script>
@@ -72,6 +71,9 @@
 		},
 
 		_onLoad: function(e) {
+			if (!this.config.server) {
+				this.config.server = window.location.host;
+			}
 			this.authenticate(this.config);
 		},
 
