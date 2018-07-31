@@ -18,6 +18,7 @@
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="core/message-handler.html">
+<link rel="import" href="core/unicom-ui.html">
 <link rel="import" href="channels/channel-list.html">
 <link rel="import" href="calls/call-list.html">
 <link rel="import" href="error-dialog.html">
@@ -185,6 +186,12 @@
                 </label>
               </div>
             </paper-tab>
+			<paper-tab>
+				<div class="layout vertical center">
+					<iron-icon icon="icons:perm-phone-msg"></iron-icon>
+					<label>Unicom</label>
+				</div>
+			</paper-tab>
           </paper-tabs>
         </app-header>
         <iron-pages selected="[[tab]]">
@@ -207,6 +214,8 @@
           </message-outbox> -->
           <questions-list id="questions" on-message="sendMessage" unread="{{unreadQuestions}}" items$="[[questions]]" lines="[[activeLines]]" debug="[[debug]]" loading="{{questionsLoading}}">
           </questions-list>
+
+		      <unicom-ui config="[[wazoConfig]]"></unicom-ui>
         </iron-pages>
       </app-header-layout>
     </template>
@@ -303,6 +312,10 @@
           type: String,
           value: '',
         },
+        wazoConfig: {
+          type: Object,
+          value: null
+        }
       },
 
       behaviors: [
@@ -378,7 +391,7 @@
               }
             }, this);
             break;
-          case 'message:list':
+          case 'messages:list':
             let messages = payload.data.messages;
             let inbox = [],
               outbox = [];
@@ -394,13 +407,13 @@
             this.inboxLoading = false;
             break;
           // case 'messageSent':
-          case 'message:sent':
+          case 'messages:sent':
             var toast = document.createElement('paper-toast');
             toast.text = 'Message successfully sent.';
             document.body.appendChild(toast);
             toast.show();
             break;
-          case 'message:update':
+          case 'messages:update':
           // case 'inboxUpdate':
             let data = payload.data;
             let count = 0;
@@ -494,7 +507,7 @@
             //   to: Date.now()
             // });
 
-            // this.send('message:fetch', {
+            // this.send('messages:fetch', {
             //   from: this.todayMidnight,
             //   to: Date.now()
             // });
@@ -529,6 +542,7 @@
                 this.push('lines', line);
               }
             }, this);
+            this.push('lines', { id: '__auto__', label: 'Auto-select' });
 
             this.diff = Date.now() - payload.data.server_time;
             this.version = payload.data.server_version || 'unknown version';
@@ -536,6 +550,7 @@
               console.log('Server time : ' + payload.data.server_time);
               console.log('Diff        : ' + this.diff);
             }
+            this.wazoConfig = payload.data.wazoConfig;
             window.setTimeout(function () {
               this.hasInitialized = true;
             }.bind(this), 1000);
