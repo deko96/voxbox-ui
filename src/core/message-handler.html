@@ -173,7 +173,9 @@
             },
 
             _getHostUrl: function() {
-                var hostUrl = 'ws://' + (this._getURLParameter('host_url') || (window.location.hostname + ':19998')); // thehangar.farmradio.org:51234
+				var protocol = window.location.protocol.indexOf('https') !== -1 ? 'wss://' : 'ws://';
+                var hostUrl = protocol + (this._getURLParameter('host_url') || (window.location.hostname + ':19998')); // thehangar.farmradio.org:51234
+				hostUrl += '/websocket';
                 if (this.debug) {
                     console.log('Host: ' + hostUrl);
                 }
