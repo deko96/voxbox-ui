@@ -33,13 +33,17 @@
         }
 
 	</style>
-
-	<iframe id="unicom" src="/unicom/voxbox.html" hidden$="[[!loaded]]"></iframe>
-
-	<template is="dom-if" if="[[!loaded]]">
+	<iframe id="unicom" src="/unicom/voxbox.html" hidden$="[[!_showTextContainer(loaded, error)]]"></iframe>
+	
+	<template is="dom-if" if="[[_showTextContainer(loaded, error)]]">
 		<div class="no-items">
 			<paper-material>
-				<paper-spinner-lite active></paper-spinner-lite>
+				<template is="dom-if" if="[[!error]]">
+					<paper-spinner-lite active></paper-spinner-lite>
+				</template>
+				<template is="dom-if" if="[[error]]">
+					[[error]]
+				</template>
 			</paper-material>
 		</div>
 	</template>
@@ -54,6 +58,10 @@
 		properties: {
 			unicom: Object,
 			config: Object,
+			error: {
+				type: String,
+				value: null
+			},
 			loaded: {
 				type: Boolean,
 				value: false
@@ -61,13 +69,20 @@
 		},
 
 		ready: function() {
-			this.unicom = this.$.unicom;
-			this.unicom.onload = this._onLoad.bind(this);
-			window.onmessage = function(e) {
-				if(e.origin && e.origin.indexOf(window.location.hostname) !== -1) {
-					this._onMessage(e.data);
-				}
-			}.bind(this);
+			if (!this.config || (!this.config.server || !this.config.user || !this.config.pass)) {
+				this.error = 'Failed to setup Unicom. Please check your server configuration and refresh the page!';
+				this.loaded = true;
+			} else {
+				this.error = null;
+				this.unicom = this.$.unicom || this.$$('#unicom');
+				//return console.log(this.unicom, this.$.unicom, this.$$('#unicom'));
+				this.unicom.onload = this._onLoad.bind(this);
+				window.onmessage = function(e) {
+					if(e.origin && e.origin.indexOf(window.location.hostname) !== -1) {
+						this._onMessage(e.data);
+					}
+				}.bind(this);
+			}
 		},
 
 		_onLoad: function(e) {
@@ -80,12 +95,17 @@
 		_onMessage: function(e) {
 			switch(e.event) {
 				case 'unicom:ready':
+					this.error = null;
 					this.loaded = true;
 					break;
 				case 'unicom:destroy':
 					this.loaded = false;
 					break;
 			}
+	  },
+
+	  _showTextContainer: function(loaded, error) {
+		  return (loaded && error && error.length) || !loaded;
 	  },
 
 	  postMessage: function(message) {
