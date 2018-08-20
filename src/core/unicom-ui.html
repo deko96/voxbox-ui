@@ -33,7 +33,7 @@
         }
 
 	</style>
-	<iframe id="unicom" src="/unicom/voxbox.html" hidden$="[[!_showTextContainer(loaded, error)]]"></iframe>
+	<iframe id="unicom" src="/unicom/voxbox.html" hidden$="[[_showTextContainer(loaded, error)]]"></iframe>
 	
 	<template is="dom-if" if="[[_showTextContainer(loaded, error)]]">
 		<div class="no-items">
@@ -69,7 +69,7 @@
 		},
 
 		ready: function() {
-			if (!this.config || (!this.config.server || !this.config.user || !this.config.pass)) {
+			if (!this.config || (!this.config.user || !this.config.pass)) {
 				this.error = 'Failed to setup Unicom. Please check your server configuration and refresh the page!';
 				this.loaded = true;
 			} else {
@@ -86,6 +86,7 @@
 		},
 
 		_onLoad: function(e) {
+			if (!this.config || (!this.config.user || !this.config.pass)) return;
 			if (!this.config.server) {
 				this.config.server = window.location.host;
 			}
